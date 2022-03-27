@@ -2,7 +2,9 @@
 title: "AdvStDaAn, Worksheet, Week 1"
 author: "Micheal Lappert"
 date: "27.03.2022"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
