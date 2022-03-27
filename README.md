@@ -45,3 +45,6 @@ The two parts consist of the following detailed program.
   
   
 ## Part II
+
+
+Note: This repository is familiarization written in Markdown.
