@@ -1,7 +1,7 @@
 ---
 title: "AdvStDaAn, Worksheet, Week 1"
 author: "Micheal Lappert"
-date: "27.03.2022"
+date: "'r Sys.Date()'"
 output:
   pdf_document: default
   html_document: default
@@ -23,6 +23,7 @@ summary(df)
 head(df)
 tail(df)
 ```
+Data looks just fine.
 
 ### Exercise 1.a)
 ```{r}
@@ -30,12 +31,28 @@ mod1 <- lm(Time ~ volume, data = df)
 summary(mod1)
 
 ```
+The model looks fine:
+- Volume is significant on the 5% niveau and the R-squared has a score of 0.93.
 
+We have to do a residual and sensitivity analysis with stochastic simulation
+to investigate the correctness of the model.
 
-You can also embed plots, for example:
+```{r, figures-side, fig.show = 'hold', out.width= '25%'}
+plot(mod1)
+plot.lmSim(mod1, SEED = 1)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Interpretation:
+1.  Tukey-Anscombe plot shows outlier with index i=9 which affects smooth curve. In the
+simulation it is visible that the original curve is extreme.
+    => The expected value of the residuals cannot be constant.
+2.  Scale-location plot shows a clear upwards trend.
+    In the simulation it is visible that the original curve is extreme.
+    => The scattering of the residuals is not constant.
+3.  q-q plot shows a slightly heavy tail and the outlier with index i=9 is 
+    again obvious.
+    => Residuals are not normally distributed.
+
+   CONCLUSION: The fit is not satisfactory. Try transformations of response and 
+               explanatory variable.
