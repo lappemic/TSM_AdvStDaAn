@@ -1,10 +1,13 @@
 ---
 title: "AdvStDaAn, Worksheet, Week 1"
 author: "Micheal Lappert"
-date: "'r Sys.Date()'"
+date: '31.03.2022'
 output:
-  pdf_document: default
-  html_document: default
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+  '': default
 ---
 
 ```{r setup, include=FALSE}
@@ -37,22 +40,24 @@ The model looks fine:
 We have to do a residual and sensitivity analysis with stochastic simulation
 to investigate the correctness of the model.
 
-```{r, figures-side, fig.show = 'hold', out.width= '25%'}
+```{r, out.width= '25%'}
 plot(mod1)
 plot.lmSim(mod1, SEED = 1)
-
 ```
 
 ### Interpretation:
-1.  Tukey-Anscombe plot shows outlier with index i=9 which affects smooth curve. In the
-simulation it is visible that the original curve is extreme.
-    => The expected value of the residuals cannot be constant.
-2.  Scale-location plot shows a clear upwards trend.
-    In the simulation it is visible that the original curve is extreme.
-    => The scattering of the residuals is not constant.
-3.  q-q plot shows a slightly heavy tail and the outlier with index i=9 is 
-    again obvious.
-    => Residuals are not normally distributed.
+1.  Tukey-Anscombe plot: Shows outlier with index i=9 which affects the smoother. In the simulation it is visible that the original curve is extreme.
+=> The expectation of the residuals cannot be constant.
+2.  Q-Q plot: In the lower as well as in the higher part of the plot some points differ from the straigt line. Most of them are within the stochastic fluctuation except i=9.
+=> The assumption of normal distributed residuals seems violated.
+3.  Scale-location plot: Shows a clear upwards trend. In the simulation it is visible that the original curve is extreme.
+=> The variance of the residuals is not constant.
+4.  Residuals vs. Leverage: Observations i = 9 & 22 have Cooke's Distance > 1 and are therefore too influentious. Both observations have addationally too much leverage.
+=> Residuals are not normally distributed.
 
-   CONCLUSION: The fit is not satisfactory. Try transformations of response and 
-               explanatory variable.
+CONCLUSION: The fit is not satisfactory. Trying transformations of response and explanatory variable. Since the noncanstant variance seems to be the most severe problem, log-transformations might help.
+               
+```{r}
+
+```
+
