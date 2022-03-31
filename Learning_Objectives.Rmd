@@ -15,7 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # Part I
 
 ## Week 1
-- Comming...
+- Review of Multiple Linear Regression 
+- You know the Maximum Likelihood Principle
 
 ## Week 2
 - Comming...
