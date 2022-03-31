@@ -1,0 +1,36 @@
+---
+title: "Learning Objectives TSM_AdvStDaAn"
+author: "Micheal Lappert"
+date: "3/31/2022"
+output: 
+  pdf_document:
+    toc: TRUE
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Part I
+
+## Week 1
+- Comming...
+
+## Week 2
+- Comming...
+
+## Week 3
+- Comming...
+
+## Week 4
+- Comming...
+
+## Week 5
+- Comming...
+
+## Week 6
+- You know what deviances are in GLM
+- You can understand AIC is generalised to GLMs
+- You know when you can apply Wald-type confidence intervals and when it is better to use deviance based confidence intervals
+- You can apply the introduced methods in statistical data analysis using R
