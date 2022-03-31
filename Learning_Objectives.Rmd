@@ -19,16 +19,30 @@ knitr::opts_chunk$set(echo = TRUE)
 - You know the Maximum Likelihood Principle
 
 ## Week 2
-- Comming...
+- You understand Akaike's information criterion (AIC) to select 'important' predictor variables
+- You know how to handle categorical predictors (factor variables in R)
+- You know what multicollinearity is and how to handle it
+- You know how to predict 
+- You understand cross validation
+- You understand the difference between interpolation vs. extrapolation
+- You know the difference between predictive vs. descriptive modelling (versus causality) and can explain it
 
 ## Week 3
-- Comming...
+- Understand Weighted Least Squares
+- You know how Robust Fitting works
+- You can fit Smooth Functions and Additive Models
+- You know how to approach Statistical Model Building
 
 ## Week 4
-- Comming...
+- You know the Logistic Regression Model and its applications
+- You know how to fit a Logistic Regression in R
+- You know how to interpret the parameter of a Logistic Regression
 
 ## Week 5
-- Comming...
+- You know the three elements that define the GLM
+- You can identify members of the GLM family
+- You know how to fit GLMs in R and know the algorithm underlying it
+- You can interpret R output of a GLM fit
 
 ## Week 6
 - You know what deviances are in GLM
