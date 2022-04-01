@@ -1,22 +1,25 @@
 ---
-title: "AdvStDaAn, Worksheet, Week 1"
+title: "**AdvStDaAn, Worksheet, Week 1**"
 author: "Micheal Lappert"
 date: '31.03.2022'
 output:
   pdf_document:
     toc: yes
+    toc_depth: 3
   html_document:
     toc: yes
+    toc_depth: 3
   '': default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      out.width = '25%')
 source('Specific_R_functions/RFn_Plot-lmSim.R')
 ```
 
 ## Exercise 1
-### Data Loading and Inspecting
+#### Dataset loading and sanity check:
 
 ```{r}
 path <- file.path('Datasets', 'Softdrink.dat')
@@ -30,8 +33,8 @@ Data looks just fine.
 
 ### Exercise 1.a)
 ```{r}
-mod1 <- lm(Time ~ volume, data = df)
-summary(mod1)
+mod1.1 <- lm(Time ~ volume, data = df)
+summary(mod1.1)
 
 ```
 The model looks fine:
@@ -40,24 +43,144 @@ The model looks fine:
 We have to do a residual and sensitivity analysis with stochastic simulation
 to investigate the correctness of the model.
 
-```{r, out.width= '25%'}
-plot(mod1)
-plot.lmSim(mod1, SEED = 1)
+```{r}
+plot(mod1.1)
+plot.lmSim(mod1.1, SEED = 1)
 ```
 
-### Interpretation:
-1.  Tukey-Anscombe plot: Shows outlier with index i=9 which affects the smoother. In the simulation it is visible that the original curve is extreme.
+#### Interpretation:
+1.  Tukey-Anscombe plot: Shows outlier with index i=9 which affects the smoother. In the simulation it is visible that the original curve is extreme.\
 => The expectation of the residuals cannot be constant.
-2.  Q-Q plot: In the lower as well as in the higher part of the plot some points differ from the straigt line. Most of them are within the stochastic fluctuation except i=9.
+2.  Q-Q plot: In the lower as well as in the higher part of the plot some points differ from the straigt line. Most of them are within the stochastic fluctuation except i=9.\
 => The assumption of normal distributed residuals seems violated.
-3.  Scale-location plot: Shows a clear upwards trend. In the simulation it is visible that the original curve is extreme.
+3.  Scale-location plot: Shows a clear upwards trend. In the simulation it is visible that the original curve is extreme.\
 => The variance of the residuals is not constant.
-4.  Residuals vs. Leverage: Observations i = 9 & 22 have Cooke's Distance > 1 and are therefore too influentious. Both observations have addationally too much leverage.
+4.  Residuals vs. Leverage: Observations i = 9 & 22 have Cooke's Distance > 1 and are therefore too influentious. Both observations have addationally too much leverage.\
 => Residuals are not normally distributed.
 
-CONCLUSION: The fit is not satisfactory. Trying transformations of response and explanatory variable. Since the noncanstant variance seems to be the most severe problem, log-transformations might help.
+*CONCLUSION*: The fit is not satisfactory. Trying transformations of response and explanatory variable. Since the noncanstant variance seems to be the most severe problem, log-transformations might help.
                
-```{r}
+### Exercise 1.b)
+#### Tukey's first-aid transformations:
 
+```{r}
+df$lVolume <- log(df$volume)
+df$lTime <- log(df$Time)
+
+head(df)
+```
+Model with transformed variables:
+```{r}
+mod1.2 <- lm(lTime ~ lVolume, data = df)
+summary(mod1.2)
+```
+```{r}
+plot(mod1.2)
+plot.lmSim(mod1.2, SEED = 1)
 ```
 
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows a somewhat strange banana form with the low in the middle which is outside the stochastic fluctuation.\
+=> The assumption of constant expactaion is therefore violated.
+2.  Q-Q plot: The data scatters nicely around the straight line and seems to be within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors seems not violated.
+3.  Scale-location plot: The smoother shows a slightly decreasing trend but seems to be ok and lies within the stochastic fluctuation.\
+=> There is no evidence against the assumption of constant variance of the residuals.
+4.  Residuals vs. Leverage: All observations have Cook's Distance <1 and therewith no too influential points.\
+=> No too influential (dangerous) observations
+
+*CONCLUSION*: The model does still not fit adequately the data, although it is much better than the one before.
+
+An alternative transformation for volume could be the square-root transformation. So let's try out:
+```{r}
+df$sVolume <- sqrt(df$volume)
+
+mod1.3 <- lm(Time ~ sVolume, data = df)
+summary(mod1.3)
+```
+The $R^{2}$ is with 0.8649 higher than before.
+
+Residual and Sensitivity Analysis:
+```{r}
+plot(mod1.3)
+plot.lmSim(mod1.3, SEED = 1)
+```
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows still a somewhat strange banana form with the low in the middle but like that it is inside the stochastic fluctuation.\
+=> The assumption of constant expactation is not violated.
+2.  Q-Q plot: The data scatters nicely around the straight line (except i=9) and seems to be within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors seems not violated.
+3.  Scale-location plot: The smoother looks ok and lies within the stochastic fluctuation.\
+=> There is no evidence against the assumption of constant variance of the residuals.
+4.  Residuals vs. Leverage: All observations have Cook's Distance <1 and therewith no too influential points.\
+=> No too influential (dangerous) observations
+
+*CONCLUSION*: The model does still fit adequately the data.
+
+### Exercise 1.c)
+The fitte model in 1.b) is:
+
+$$Time_i = exp(\beta_0) + exp(\beta_1) * sqrt(volume_i) + exp(E_i)$$
+with $$\mu = 0$$ $$\sigma = \sigma$$
+
+### Exercise 1.d)
+Extending the model adequately with the second explanatory variable 'distance':
+```{r}
+df$lDistance <- log(df$distance)
+mod1.4 <- lm(lTime ~ sVolume + lDistance, data = df)
+summary(mod1.4)
+```
+The $R^{2}$ increases to 0.9443 which is a really good fit. Lets check the model:
+```{r}
+plot(mod1.4)
+plot.lmSim(mod1.4, SEED = 1)
+```
+
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows a really nice almost straight line which is within the stochastic fluctuation.\
+=> The assumption of constant expactation is not violated.
+2.  Q-Q plot: The data scatters nicely around the straight line and seems to be within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors seems not violated.
+3.  Scale-location plot: The smoother shows a almost straight line and is within the stochastic fluctuation.\
+=> There is no evidence against the assumption of constant variance of the residuals.
+4.  Residuals vs. Leverage: All observations have Cook's Distance <1 and therewith no too influential points. Some are leverage point with leverage > $2*3/25=0.24$ (25 examples in dataset)\
+=> No too influential (dangerous) observations
+
+*CONCLUSION*: The model does fit adequately the data.
+
+## Exercise 2
+#### Loading and Checking the data
+```{r}
+path <- file.path('Datasets', 'Windmill.dat')
+df <- read.table(path, header = TRUE)
+
+summary(df)
+dim(df)
+head(df)
+tail(df)
+```
+
+### Exercise 2.a)
+Start with fitting an ordinary regression model:
+```{r}
+mod2.1 <- lm(DC.output ~ velocity, data = df)
+summary(mod2.1)
+```
+The model seems to fit not too bad. Lets check this:
+```{r}
+plot(mod2.1)
+plot.lmSim(mod2.1)
+```
+
+# STILL TO DO!!
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows a really nice almost straight line which is within the stochastic fluctuation.\
+=> The assumption of constant expactation is not violated.
+2.  Q-Q plot: The data scatters nicely around the straight line and seems to be within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors seems not violated.
+3.  Scale-location plot: The smoother shows a almost straight line and is within the stochastic fluctuation.\
+=> There is no evidence against the assumption of constant variance of the residuals.
+4.  Residuals vs. Leverage: All observations have Cook's Distance <1 and therewith no too influential points. Some are leverage point with leverage > $2*3/25=0.24$ (25 examples in dataset)\
+=> No too influential (dangerous) observations
+
+*CONCLUSION*: The model does fit adequately the data.
