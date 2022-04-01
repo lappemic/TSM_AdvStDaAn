@@ -169,18 +169,90 @@ summary(mod2.1)
 The model seems to fit not too bad. Lets check this:
 ```{r}
 plot(mod2.1)
-plot.lmSim(mod2.1)
+plot.lmSim(mod2.1, SEED = 1)
 ```
 
-# STILL TO DO!!
 #### Interpretation:
-1.  Tukey-Anscombe plot: The smoother shows a really nice almost straight line which is within the stochastic fluctuation.\
-=> The assumption of constant expactation is not violated.
-2.  Q-Q plot: The data scatters nicely around the straight line and seems to be within the stochastic fluctuation.\
+1.  Tukey-Anscombe plot: The smoother shows a banana form which is outside the stochastic fluctuation.\
+=> The assumption of constant expactation is violated.
+2.  Q-Q plot: The data does not scatter nicely around the straight line and but seems to be within the stochastic fluctuation.\
 => The assumption of Gaussian distributed errors seems not violated.
 3.  Scale-location plot: The smoother shows a almost straight line and is within the stochastic fluctuation.\
 => There is no evidence against the assumption of constant variance of the residuals.
-4.  Residuals vs. Leverage: All observations have Cook's Distance <1 and therewith no too influential points. Some are leverage point with leverage > $2*3/25=0.24$ (25 examples in dataset)\
+4.  Residuals vs. Leverage: All observations have Cook's Distance <1 and therewith no too influential points. There are also no leverage points with leverage > $2*2/25=$ `r 2*2/25` (25 examples in dataset, 2 variables in model)\
 => No too influential (dangerous) observations
 
-*CONCLUSION*: The model does fit adequately the data.
+*CONCLUSION*: The model does not fit adequately the data. Maybe some transfromations would help to remedy the inadequacy. -> Exercise 2.b)
+
+### Exercise 2.b)
+```{r}
+df$lVelocity <- log(df$velocity)
+df$lDC.output <- log(df$DC.output)
+
+mod2.2 <- lm(lDC.output ~ lVelocity, data = df)
+summary(mod2.2)
+```
+Variable seems to be significant and $R^{2} is with 0.7371 not too bad. But we could surely do better with some adjustments. Lets check the model:
+```{r}
+plot(mod2.2)
+plot.lmSim(mod2.2, SEED = 1)
+```
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother still shows a banana form which is outside the stochastic fluctuation.\
+=> The assumption of constant expactation is violated.
+2.  Q-Q plot: The data does better scatter around the straight line (except outlier i=25) but is outside the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors is violated.
+3.  Scale-location plot: The smoother shows a wavy line and is within the stochastic fluctuation.\
+=> There is no evidence against the assumption of constant variance of the residuals.
+4.  Residuals vs. Leverage: Observation i=25 has Cook's Distance >1 and therewith is too influential. But there are no leverage points with leverage > $2*2/25=$ `r 2*2/25` (25 examples in dataset, 2 variables in model)\
+=> i=25 is too influential observations
+
+*CONCLUSION*: The model does not fit adequately the data. Maybe some transfromations would help to remedy the inadequacy. -> Exercise 2.c)
+
+### Exercise 2.c)
+```{r}
+df$tVelocity <- 1/df$velocity
+
+mod2.3 <- lm(DC.output ~ tVelocity, data = df)
+summary(mod2.3)
+```
+This model seems to fit the data way better. The transformation from theroy seems pretty adequat. Lets check the model:
+```{r}
+par(mfrow = c(2,4))
+plot(mod2.3)
+plot.lmSim(mod2.3, SEED = 1)
+```
+
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows now no banana form anymore and is within the stochastic fluctuation.\
+=> The assumption of constant expactation of the errors is not violated.
+2.  Q-Q plot: The data does scatter around the straight line and is within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors is not violated.
+3.  Scale-location plot: The smoother shows a little wavy line but is within the stochastic fluctuation.\
+=> There is no evidence against the assumption of constant variance of the residuals.
+4.  Residuals vs. Leverage: No Observation has Cook's Distance >1. And there are no leverage points with leverage > $2*2/25=$ `r 2*2/25` (25 examples in dataset, 2 variables in model)\
+=> i=25 is too influential observations
+
+*CONCLUSION*: The model does fit adequately the data. The transformation of the velocity variable did indeed remedy the model inadequaties.
+
+### Exercise 2.d)
+Plotting the model for the interpretation of the parameters $\beta_0$ and $\beta_1$.
+```{r, out.width='100%'}
+par(mfrow=c(1,1))
+plot(DC.output ~ velocity, data = df,
+     ylim = range(df$DC.output, coef(mod2.3)[1], 0)) 
+# -> The range() takes the larger value of DC.output and the intercept
+abline(h = coef(mod2.3)[1], col = "red")
+
+# predicted DC.output
+range(df$tVelocity)
+df2 <- data.frame(tVelocity = seq(0.043, 0.185, length = 50))
+lines(1/df2$tVelocity, predict(mod2.3, newdata = df2))
+
+# How much wind is needed at least?
+(h.minW <- -coef(mod2.3)[2]/coef(mod2.3)[1])  ## = 5.208521 m/s
+abline(v=h.minW, col=5, lty=6)
+abline(h=0)
+```
+
+## Exercise 3
