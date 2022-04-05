@@ -256,3 +256,59 @@ abline(h=0)
 ```
 
 ## Exercise 3
+#### Loading and checking the data
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'NPScosts.dat')
+df <- read.table(path, header = TRUE)
+
+summary(df)
+dim(df)
+head(df)
+tail(df)
+plot(df)
+```
+Data looks fine.
+
+### Exercise 3.a)
+*Tukey's first-aid transformations*
+```{r}
+df$lCost <- log(df$cost)
+# df$sDate <- sqrt(df$date) -> Time goes in linearly
+# df$sT1 <- sqrt(df$t1)
+# df$sT2 <- sqrt(df$t2)
+df$lCap <- log(df$cap)
+df$sCum.n <- sqrt(df$cum.n)
+
+head(df)
+```
+The transformations look good
+
+### Exercise 3.b)
+Fitting a regression model including all explanator variables. Does partial turnkey guarantee affect the costs of the plants significantly on the 5% level?
+```{r}
+mod3.1 <- lm(lCost ~ date + t1 + t2 + lCap + pr + ne + ct + bw + sCum.n + pt,
+             data = df)
+summary(mod3.1)
+```
+The partial turnkey guarantee does not affect the costs of the plants significantly on the 5% level in this model.
+
+### Exercise 3.c)
+Assessing the quality of the fitted regression model by a residual and sensitivity analysis:
+```{r, out.width='100%'}
+par(mfrow = c(2, 4))
+plot(mod3.1)
+plot.lmSim(mod3.1, SEED = 1)
+```
+
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows a strong decreasing trend in the last third which is, however, within the stochastic fluctuation.\
+=> The assumption of constant expactation of the errors is not violated.
+2.  Q-Q plot: The observations lie almost perfect on the straight line and are within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors is not violated.
+3.  Scale-location plot: The smoother shows a wavy increasing line which is within the stochastic fluctuation.\
+=> The assumption of constant variance of the errors is not violated.
+4.  Residuals vs. Leverage: No Observation has Cook's Distance >1. And there are no leverage points with leverage > $2*11/32=$ `r 2*11/32` (32 examples in dataset, 11 variables in model)\
+=> No dangerous or too influential residuals identified.
+
+*CONCLUSION*: The model does fit adequately the data. 
+
