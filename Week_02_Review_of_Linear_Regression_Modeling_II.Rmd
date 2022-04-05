@@ -1,0 +1,31 @@
+---
+title: "**AdvStDaAn, Worksheet, Week 2**"
+author: "Micheal Lappert"
+date: '05.04.2022'
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+  html_document:
+    toc: yes
+    toc_depth: 3
+  '': default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      out.width = '25%')
+source('Specific_R_functions/RFn_Plot-lmSim.R')
+```
+
+## Exercise 1
+#### Dataset loading and sanity check:
+
+```{r}
+path <- file.path('Datasets', 'Softdrink.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+head(df)
+tail(df)
+```
