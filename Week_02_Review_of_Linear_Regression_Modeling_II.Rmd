@@ -22,10 +22,38 @@ source('Specific_R_functions/RFn_Plot-lmSim.R')
 #### Dataset loading and sanity check:
 
 ```{r}
-path <- file.path('Datasets', 'Softdrink.dat')
+path <- file.path('Datasets', 'sniffer.dat')
 df <- read.table(path, header=TRUE)
 
 summary(df)
+dim(df)
 head(df)
 tail(df)
+plot(df)
 ```
+Data looks like it is highly correlated with each other. But we keep it this way for the first exercises.
+
+### Exercise 1.a)
+Fitting a first model without any transformations to the data:
+```{r}
+lm1.1 <- lm(Y ~ ., data = df)
+```
+The model looks initially not too bad. For a proper evaluation one would need to perform a residual and sensitivity analysis to investigate the adequacy of the model. But for this exercise we keep the track of the worksheet.
+
+**E1.a)(I) Estimated coefficients**
+```{r}
+coef(lm1.1)
+```
+**E1.a)(II) F-statistic**
+```{r}
+summary(lm1.1)
+```
+The p-value of the F-statistic is << 0.05 indicating that at least one of the variables can not be 0 and therfore are important to describe the response value. Even though, the p-values of the t-test indicate that not all of them are of the same importance. In this case are only 2 explanatory variables significantly important (Temp.Gas & Vapor.Dispensed).
+**E1.a)(III) Variance Inflation Factor (VIF)**
+Inspecting multicollinearity with the Variance Inflation Factor (VIF):
+```{r}
+library(car)
+vif(lm1.1)
+```
+A vif above 5 to 10 indicates problems with multicollinearity. According to this guideline all variables but Temp.Gas have too high vif factors and therewith problems with multicollinearity. Vapor.Tank is affected the most.
+
