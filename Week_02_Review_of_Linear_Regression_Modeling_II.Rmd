@@ -21,7 +21,7 @@ source('Specific_R_functions/RFn_Plot-lmSim.R')
 ## Exercise 1
 #### Dataset loading and sanity check:
 
-```{r}
+```{r, out.width='100%'}
 path <- file.path('Datasets', 'sniffer.dat')
 df <- read.table(path, header=TRUE)
 
@@ -31,6 +31,7 @@ head(df)
 tail(df)
 plot(df)
 ```
+
 Data looks like it is highly correlated with each other. But we keep it this way for the first exercises.
 
 ### Exercise 1.a)
@@ -38,22 +39,83 @@ Fitting a first model without any transformations to the data:
 ```{r}
 lm1.1 <- lm(Y ~ ., data = df)
 ```
+
 The model looks initially not too bad. For a proper evaluation one would need to perform a residual and sensitivity analysis to investigate the adequacy of the model. But for this exercise we keep the track of the worksheet.
 
 **E1.a)(I) Estimated coefficients**
 ```{r}
 coef(lm1.1)
 ```
+
 **E1.a)(II) F-statistic**
 ```{r}
 summary(lm1.1)
 ```
+
 The p-value of the F-statistic is << 0.05 indicating that at least one of the variables can not be 0 and therfore are important to describe the response value. Even though, the p-values of the t-test indicate that not all of them are of the same importance. In this case are only 2 explanatory variables significantly important (Temp.Gas & Vapor.Dispensed).
-**E1.a)(III) Variance Inflation Factor (VIF)**
+
+**E1.a)(III) Variance Inflation Factor (VIF)**\
 Inspecting multicollinearity with the Variance Inflation Factor (VIF):
 ```{r}
 library(car)
 vif(lm1.1)
 ```
+
 A vif above 5 to 10 indicates problems with multicollinearity. According to this guideline all variables but Temp.Gas have too high vif factors and therewith problems with multicollinearity. Vapor.Tank is affected the most.
 
+### Exercise 1.b)
+Performing a variable selection using the AIC stepwise from the model fitted in Exercise 1.a):
+```{r}
+step(lm1.1)
+```
+
+The best model with the stepwise variable selection from the model in Exercise 1.a) is\
+              *Y ~ Temp.Gas + Vapor.Tank + Vapor.Dispensed*\
+Temp.Tank gets not included. This would be due to multicollinearity with other variables.
+
+### Exercise 1.c)
+Did we already remedy the initially found multicollinearity with the stepwise variable selection? We can check by performing  a vif on the newly found model.
+```{r}
+lm1.2 <- lm(Y ~ Temp.Gas + Vapor.Tank + Vapor.Dispensed, data = df)
+vif(lm1.2)
+```
+
+No, Vapor.Tank and Vapor.Dispensed have still vif values from above 5 to 10. Which ones are correlated the most?
+```{r, out.width='100%'}
+pairs(df[,-5])
+```
+
+Vapor.Tank and Vapor.Dispensed seem to be correlated the most. So we try transformations of the variables by replacing them by the mean and the difference.
+```{r}
+df2 <- data.frame(diffVapor = df$Vapor.Tank - df$Vapor.Dispensed,
+                  meanVapor = (df$Vapor.Tank + df$Vapor.Dispensed) / 2)
+
+df3 <- cbind(df2, Temp.Tank = df$Temp.Tank, Temp.Gas = df$Temp.Gas, Y = df$Y)
+
+head(df3)
+```
+
+With the newly created data.frame with the transformed variables one can now perform another stepwise variable selection.
+```{r}
+lm1.3 <- lm(Y ~ ., data = df3)
+step(lm1.3)
+```
+
+This is the same model as found in Exercise 1.b) but with the transformed variables. Now one can check if the problems with multicollinearity still persists.
+```{r}
+lm1.4 <- lm(Y ~ diffVapor + meanVapor + Temp.Gas, data = df3)
+vif(lm1.4)
+```
+
+All vif values are lower than 5 and therewith the problem with multicollinearity does not persist.
+
+How looks the residual and sensitivity analysis?
+```{r, out.width='100%'}
+par(mfrow = c(2, 4))
+plot(lm1.4)
+plot.lmSim(lm1.4, SEED = 1)
+```
+
+leverage points > `r 2 * length(coef(lm1.4)) / nrow(df3)`
+
+There is no evidence that any of the assumptions is violated.
