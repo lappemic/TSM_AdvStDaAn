@@ -43,6 +43,19 @@ The two parts consist of the following detailed program.
   5.C Quasi Approach<br/>
   5.D Multinomial Models<br/>
   
+6. Model Simplification and Inference<br/>
+  6.1 Inference Based on Deviances and Variable Selection<br/>
+  6.2 Residual deviance if $\phi$ = 1<br/>
+  6.3 Variable selection (AIC)<br/>
+  
+7. Diagnostics and Model Improvements<br/>
+  7.1 Dispersion Parameter<br/>
+    7.1.1 Its estimation<br/>
+    7.1.2 Models with $\phi$ = 1 and overdispersion<br/>
+  7.2 Model Adequacy Checking - Diagnostics<br/>
+    7.2.1 Defining residual in case of glm<br/>
+    7.2.2 Do the basic diagnostic plots still work?<br/>
+  7.3 Generalised Additive Models (GAM)<br/>
   
 ## Part II
 
