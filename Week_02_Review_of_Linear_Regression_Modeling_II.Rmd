@@ -250,3 +250,106 @@ vif(lm2.6)
 Multicollinearity seems also not to be a problem anymore. The model fits the data well like that.
 
 ## Exercise 3
+#### Dataset loading and sanity check:
+
+```{r}
+path <- file.path('Datasets', 'windmill.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+dim(df)
+head(df)
+tail(df)
+par(mfrow=c(1,1))
+plot(df)
+
+df$tVel <- (1 / df$velocity)
+head(df)
+```
+
+The model was already used in the worksheet of week 1, that is why it is not investigated here but instead used for predictions of DC.output for wind veolicites of one an ten meter per second. So we fit first the known model and used it then for prediciton.
+```{r}
+lm3.1 <- lm(DC.output ~ tVel, data = df)
+
+dfPreds <- data.frame(tVel = c(1/1,
+                              1/10))
+predict(lm3.1, newdata = dfPreds, interval = 'prediction', level = 0.95)
+```
+
+The prediciton of the first line (1 meter per second wind velocity) is not usable. One has always to investigate the prediction(-range) and make sure that they are plausible!
+
+## Exercise 4
+#### Dataset loading and sanity check:
+
+```{r}
+path <- file.path('Datasets', 'NPScosts.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+dim(df)
+head(df)
+tail(df)
+par(mfrow=c(1,1))
+plot(df)
+```
+
+The dataset and the model were already partially investigated in Exercise 3 from week 1. We take off where we ended there.
+
+### Exercise 4.a)
+First a variable selection gets perfomed on the model built in Exercise 3 week 1 (including the performed variable transformations).
+```{r}
+df$lCost <- log(df$cost)
+df$lCap <- log(df$cap)
+df$sCum.n <- sqrt(df$cum.n)
+
+mod3.1 <- lm(lCost ~ date + t1 + t2 + lCap + pr + ne + ct + bw + sCum.n + pt,
+             data = df)
+summary(mod3.1)
+
+step(mod3.1, scope = list(upper =~ date + t1 + t2 + lCap + pr + ne + ct + bw + sCum.n + pt,
+                             lower =~ 1))
+```
+
+Starting from the full model the stepwise variable selection suggests the following model:
+lCost = date + t2 + lCap + pr + ne + ct + sCum.n + pt
+and therewith drops just 2 variables (t1 & bw) and results in an AIC of -110.01.
+
+What if we start with an empty model and perform the variable selection?
+```{r}
+step(lm(lCost ~ 1, data = df),
+     direction = 'both',
+     scope = list(upper =~ date + t1 + t2 + lCap + pr + ne + ct + bw + sCum.n + pt,
+                  lower =~ 1))
+```
+
+This puts out 
+lCost = pt + lCap + date + ne + ct + sCum.n
+and drops 4 variables (t1, t2, bw & pr) with an AIC of -110.35. Therewith one can conclude that the second model is more parsimonious than the first because its lower AIC.
+
+### Exercise 4.b)
+What about the residual and sensitivity analysis?
+```{r}
+lm3.2 <- lm(lCost ~ pt + lCap + date + ne + ct + sCum.n, data = df)
+summary(lm3.2)
+
+par(mfrow=c(2,4))
+plot(lm3.2)
+plot.lmSim(lm3.2, SEED = 1)
+```
+
+There is no evidence that any of the model assumptions is violated. What about multicollinearity?
+```{r}
+vif(lm3.2)
+```
+
+There is also no problem with multicollinearity. One can conclude therewith that the model fits the data well.
+
+### Exercise 4.c)
+```{r}
+confint(lm3.2)
+```
+
+### Question to 4.c)
+How do we see with the output above, that pt affects the price significantly?
+
+
