@@ -352,4 +352,3 @@ confint(lm3.2)
 ### Question to 4.c)
 How do we see with the output above, that pt affects the price significantly?
 
-
