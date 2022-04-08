@@ -13,8 +13,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      out.width = '25%')
+knitr::opts_chunk$set(echo = TRUE)
 source('Specific_R_functions/RFn_Plot-lmSim.R')
 ```
 
@@ -119,3 +118,135 @@ plot.lmSim(lm1.4, SEED = 1)
 leverage points > `r 2 * length(coef(lm1.4)) / nrow(df3)`
 
 There is no evidence that any of the assumptions is violated.
+
+## Exercise 2
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'jet.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+dim(df)
+head(df)
+tail(df)
+plot(df)
+```
+
+There seems to be an issue with multicollinearity as can be seen in the pairsplot. But lets first transform first the variables according to Tukey's first-aid transformations:
+```{r}
+dft1 <- data.frame(lX1 = log(df$x1),
+                   lX2 = log(df$x2),
+                   lX3 = log(df$x3),
+                   lX4 = log(df$x4),
+                   x5 = df$x5,
+                   x6 = df$x6,
+                   lY = log(df$Y))
+
+head(dft1)
+```
+
+-> x5 and x6 are not transformed because temperature can be negeative (do not transform variables which could be negative numbers according to Tukey's first-aid transformations).
+
+With the transformed dataset one can now start modeling a linear model. Let's start with a full model which includes all the explanatory variables.
+
+```{r}
+lm2.1 <- lm(lY ~ ., data = dft1)
+summary(lm2.1)
+```
+
+The $R^{2}$ looks actually pretty good. But not all the variables seem to be relevant and we have to do a residual and sensitivity analysis first.
+```{r}
+par(mfrow=c(2,4))
+plot(lm2.1)
+plot.lmSim(lm2.1, SEED = 1)
+```
+
+Observation i=20 is an outlier. We remove it and build a new model without it and analyze it.
+```{r}
+ind <- 20
+lm2.2 <- lm(lY ~ ., data = dft1, subset = -ind)
+summary(lm2.2)
+
+par(mfrow=c(2,4))
+plot(lm2.2)
+plot.lmSim(lm2.2, SEED = 1)
+```
+
+There is no evidence that any of the assumptions is violated and no outlier is visible. Lets now perform a variable selection with the step() function.
+```{r}
+step(lm2.2, scope = list(upper =~ lX1 + lX2 + lX3 + lX4 + x5 + x6, lower =~ 1))
+step(lm(lY ~ 1, data = dft1[-ind,]),
+     direction = 'both',
+     scope = list(upper =~  lX1 + lX2 + lX3 + lX4 + x5 + x6,
+                  lower =~ 1))
+```
+
+In both cases the final suggested model with the lowest AIC is
+lY = lX1 + lX2 + x6
+without the observation i=20.
+
+So lets investigate this model with a residual and sensitivity analysis.
+```{r}
+lm2.3 <- lm(lY ~ lX1 + lX2 + x6, data = dft1[-20,])
+
+par(mfrow = c(2,4))
+plot(lm2.3)
+plot.lmSim(lm2.3, SEED = 1)
+```
+
+There is no evidence of any violation of the model assumptions. So lets now investigate the multicollinearity with the Variance Inflation Factor (vif)
+```{r}
+library(car)
+vif(lm2.3)
+```
+
+There seems to be a problem with multicollinearity for the variables lX1 and lX2. Lets look at it:
+```{r}
+plot(dft1[, c('lX1', 'lX2', 'x6')])
+```
+
+Indeed, lX1 and lX2 are highliy correlated. Lets transform them to the mean and their difference and check if the plot looks better:
+```{r}
+dft1$dlRoSp <- dft1$lX2 - dft1$lX1
+dft1$mlRoSp <- (dft1$lX1 + dft1$lX2)/2
+head(dft1)
+lm2.4 <- lm(lY ~ dlRoSp + mlRoSp + x6, data = dft1[-20,])
+summary(lm2.4)
+vif(lm2.4)
+```
+
+This does not get any better: Still looks like a very strong correlation. So one could try the transformaion with the untransformed variables.
+```{r}
+dft2 <- data.frame(dRoSp = df$x2 - df$x1,
+                   mRoSp = (df$x1 + df$x2)/2,
+                   x6 = df$x6,
+                   lY = dft1$lY)
+head(dft2)
+plot(dft2)
+lm2.5 <- lm(lY ~ ., data = dft2[-20,])
+summary(lm2.5)
+vif(lm2.5)
+```
+
+Still problems with the multicollinearity. Because in this model dRoSp is not significant, one can drop this variable.
+```{r}
+lm2.6 <- lm(lY ~ mRoSp + x6, data = dft2[-20,])
+summary(lm2.6)
+```
+
+Like that all the variables are significant and the $R^{2}$ is still 0.9972 the model performance and suitability looks still very goog. How about the residual and sensitivity analysis?
+```{r}
+par(mfrow=c(2,4))
+plot(lm2.6)
+plot.lmSim(lm2.6, SEED = 1)
+```
+
+No model assumptions are violated. What about the multicollinearity problem?
+```{r}
+vif(lm2.6)
+```
+
+Multicollinearity seems also not to be a problem anymore. The model fits the data well like that.
+
+## Exercise 3
