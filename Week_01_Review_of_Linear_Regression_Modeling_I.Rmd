@@ -210,6 +210,7 @@ plot.lmSim(mod2.2, SEED = 1)
 *CONCLUSION*: The model does not fit adequately the data. Maybe some transfromations would help to remedy the inadequacy. -> Exercise 2.c)
 
 ### Exercise 2.c)
+Theroy suggests the following transformation.
 ```{r}
 df$tVelocity <- 1/df$velocity
 
