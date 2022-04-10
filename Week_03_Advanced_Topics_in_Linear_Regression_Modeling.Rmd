@@ -21,7 +21,7 @@ source('Specific_R_functions/RFn_Plot-lmSim.R')
 #### Dataset loading and sanity check:
 
 ```{r, out.width='100%'}
-path <- file.path('Datasets', 'sniffer.dat')
+path <- file.path('Datasets', 'Synthetic.dat')
 df <- read.table(path, header=TRUE)
 
 summary(df)
@@ -31,324 +31,27 @@ tail(df)
 plot(df)
 ```
 
-Data looks like it is highly correlated with each other. But we keep it this way for the first exercises.
-
-### Exercise 1.a)
-Fitting a first model without any transformations to the data:
+There seems to be some strong correlation between x2 and Y but withing x1 and x2 seems not to be a problem with multicollinearity. We fit an robust MM-Estimator model to the data.
 ```{r}
-lm1.1 <- lm(Y ~ ., data = df)
+library(robustbase)
+rlm1.1 <- lmrob(Y ~ x1 + x2, data = df)
+summary(rlm1.1)
+coef(rlm1.1)
 ```
 
-The model looks initially not too bad. For a proper evaluation one would need to perform a residual and sensitivity analysis to investigate the adequacy of the model. But for this exercise we keep the track of the worksheet.
+8 observations were identified as outliers from the MM-Estimator. The $R^{2}$ has a pretty good score of 0.986.
 
-**E1.a)(I) Estimated coefficients**
+Coefficients:
 ```{r}
-coef(lm1.1)
+coef(rlm1.1)
 ```
+ 
+The estimated standard dviation of the error is 1.111.
 
-**E1.a)(II) F-statistic**
-```{r}
-summary(lm1.1)
-```
-
-The p-value of the F-statistic is << 0.05 indicating that at least one of the variables can not be 0 and therfore are important to describe the response value. Even though, the p-values of the t-test indicate that not all of them are of the same importance. In this case are only 2 explanatory variables significantly important (Temp.Gas & Vapor.Dispensed).
-
-**E1.a)(III) Variance Inflation Factor (VIF)**\
-Inspecting multicollinearity with the Variance Inflation Factor (VIF):
-```{r}
-library(car)
-vif(lm1.1)
-```
-
-A vif above 5 to 10 indicates problems with multicollinearity. According to this guideline all variables but Temp.Gas have too high vif factors and therewith problems with multicollinearity. Vapor.Tank is affected the most.
-
-### Exercise 1.b)
-Performing a variable selection using the AIC stepwise from the model fitted in Exercise 1.a):
-```{r}
-step(lm1.1)
-```
-
-The best model with the stepwise variable selection from the model in Exercise 1.a) is\
-              *Y ~ Temp.Gas + Vapor.Tank + Vapor.Dispensed*\
-Temp.Tank gets not included. This would be due to multicollinearity with other variables.
-
-### Exercise 1.c)
-Did we already remedy the initially found multicollinearity with the stepwise variable selection? We can check by performing  a vif on the newly found model.
-```{r}
-lm1.2 <- lm(Y ~ Temp.Gas + Vapor.Tank + Vapor.Dispensed, data = df)
-vif(lm1.2)
-```
-
-No, Vapor.Tank and Vapor.Dispensed have still vif values from above 5 to 10. Which ones are correlated the most?
-```{r, out.width='100%'}
-pairs(df[,-5])
-```
-
-Vapor.Tank and Vapor.Dispensed seem to be correlated the most. So we try transformations of the variables by replacing them by the mean and the difference.
-```{r}
-df2 <- data.frame(diffVapor = df$Vapor.Tank - df$Vapor.Dispensed,
-                  meanVapor = (df$Vapor.Tank + df$Vapor.Dispensed) / 2)
-
-df3 <- cbind(df2, Temp.Tank = df$Temp.Tank, Temp.Gas = df$Temp.Gas, Y = df$Y)
-
-head(df3)
-```
-
-With the newly created data.frame with the transformed variables one can now perform another stepwise variable selection.
-```{r}
-lm1.3 <- lm(Y ~ ., data = df3)
-step(lm1.3)
-```
-
-This is the same model as found in Exercise 1.b) but with the transformed variables. Now one can check if the problems with multicollinearity still persists.
-```{r}
-lm1.4 <- lm(Y ~ diffVapor + meanVapor + Temp.Gas, data = df3)
-vif(lm1.4)
-```
-
-All vif values are lower than 5 and therewith the problem with multicollinearity does not persist.
-
-How looks the residual and sensitivity analysis?
-```{r, out.width='100%'}
-par(mfrow = c(2, 4))
-plot(lm1.4)
-plot.lmSim(lm1.4, SEED = 1)
-```
-
-leverage points > `r 2 * length(coef(lm1.4)) / nrow(df3)`
-
-There is no evidence that any of the assumptions is violated.
-
-## Exercise 2
-#### Dataset loading and sanity check:
-
-```{r, out.width='100%'}
-path <- file.path('Datasets', 'jet.dat')
-df <- read.table(path, header=TRUE)
-
-summary(df)
-dim(df)
-head(df)
-tail(df)
-plot(df)
-```
-
-There seems to be an issue with multicollinearity as can be seen in the pairsplot. But lets first transform first the variables according to Tukey's first-aid transformations:
-```{r}
-dft1 <- data.frame(lX1 = log(df$x1),
-                   lX2 = log(df$x2),
-                   lX3 = log(df$x3),
-                   lX4 = log(df$x4),
-                   x5 = df$x5,
-                   x6 = df$x6,
-                   lY = log(df$Y))
-
-head(dft1)
-```
-
--> x5 and x6 are not transformed because temperature can be negeative (do not transform variables which could be negative numbers according to Tukey's first-aid transformations).
-
-With the transformed dataset one can now start modeling a linear model. Let's start with a full model which includes all the explanatory variables.
-
-```{r}
-lm2.1 <- lm(lY ~ ., data = dft1)
-summary(lm2.1)
-```
-
-The $R^{2}$ looks actually pretty good. But not all the variables seem to be relevant and we have to do a residual and sensitivity analysis first.
+Residual ans sensitivity analysis:
 ```{r}
 par(mfrow=c(2,4))
-plot(lm2.1)
-plot.lmSim(lm2.1, SEED = 1)
+plot(rlm1.1)
+plot.lmrob(rlm1.1)
 ```
-
-Observation i=20 is an outlier. We remove it and build a new model without it and analyze it.
-```{r}
-ind <- 20
-lm2.2 <- lm(lY ~ ., data = dft1, subset = -ind)
-summary(lm2.2)
-
-par(mfrow=c(2,4))
-plot(lm2.2)
-plot.lmSim(lm2.2, SEED = 1)
-```
-
-There is no evidence that any of the assumptions is violated and no outlier is visible. Lets now perform a variable selection with the step() function.
-```{r}
-step(lm2.2, scope = list(upper =~ lX1 + lX2 + lX3 + lX4 + x5 + x6, lower =~ 1))
-step(lm(lY ~ 1, data = dft1[-ind,]),
-     direction = 'both',
-     scope = list(upper =~  lX1 + lX2 + lX3 + lX4 + x5 + x6,
-                  lower =~ 1))
-```
-
-In both cases the final suggested model with the lowest AIC is
-lY = lX1 + lX2 + x6
-without the observation i=20.
-
-So lets investigate this model with a residual and sensitivity analysis.
-```{r}
-lm2.3 <- lm(lY ~ lX1 + lX2 + x6, data = dft1[-20,])
-
-par(mfrow = c(2,4))
-plot(lm2.3)
-plot.lmSim(lm2.3, SEED = 1)
-```
-
-There is no evidence of any violation of the model assumptions. So lets now investigate the multicollinearity with the Variance Inflation Factor (vif)
-```{r}
-library(car)
-vif(lm2.3)
-```
-
-There seems to be a problem with multicollinearity for the variables lX1 and lX2. Lets look at it:
-```{r}
-plot(dft1[, c('lX1', 'lX2', 'x6')])
-```
-
-Indeed, lX1 and lX2 are highliy correlated. Lets transform them to the mean and their difference and check if the plot looks better:
-```{r}
-dft1$dlRoSp <- dft1$lX2 - dft1$lX1
-dft1$mlRoSp <- (dft1$lX1 + dft1$lX2)/2
-head(dft1)
-lm2.4 <- lm(lY ~ dlRoSp + mlRoSp + x6, data = dft1[-20,])
-summary(lm2.4)
-vif(lm2.4)
-```
-
-This does not get any better: Still looks like a very strong correlation. So one could try the transformaion with the untransformed variables.
-```{r}
-dft2 <- data.frame(dRoSp = df$x2 - df$x1,
-                   mRoSp = (df$x1 + df$x2)/2,
-                   x6 = df$x6,
-                   lY = dft1$lY)
-head(dft2)
-plot(dft2)
-lm2.5 <- lm(lY ~ ., data = dft2[-20,])
-summary(lm2.5)
-vif(lm2.5)
-```
-
-Still problems with the multicollinearity. Because in this model dRoSp is not significant, one can drop this variable.
-```{r}
-lm2.6 <- lm(lY ~ mRoSp + x6, data = dft2[-20,])
-summary(lm2.6)
-```
-
-Like that all the variables are significant and the $R^{2}$ is still 0.9972 the model performance and suitability looks still very goog. How about the residual and sensitivity analysis?
-```{r}
-par(mfrow=c(2,4))
-plot(lm2.6)
-plot.lmSim(lm2.6, SEED = 1)
-```
-
-No model assumptions are violated. What about the multicollinearity problem?
-```{r}
-vif(lm2.6)
-```
-
-Multicollinearity seems also not to be a problem anymore. The model fits the data well like that.
-
-## Exercise 3
-#### Dataset loading and sanity check:
-
-```{r}
-path <- file.path('Datasets', 'windmill.dat')
-df <- read.table(path, header=TRUE)
-
-summary(df)
-dim(df)
-head(df)
-tail(df)
-par(mfrow=c(1,1))
-plot(df)
-
-df$tVel <- (1 / df$velocity)
-head(df)
-```
-
-The model was already used in the worksheet of week 1, that is why it is not investigated here but instead used for predictions of DC.output for wind veolicites of one an ten meter per second. So we fit first the known model and used it then for prediciton.
-```{r}
-lm3.1 <- lm(DC.output ~ tVel, data = df)
-
-dfPreds <- data.frame(tVel = c(1/1,
-                              1/10))
-predict(lm3.1, newdata = dfPreds, interval = 'prediction', level = 0.95)
-```
-
-The prediciton of the first line (1 meter per second wind velocity) is not usable. One has always to investigate the prediction(-range) and make sure that they are plausible!
-
-## Exercise 4
-#### Dataset loading and sanity check:
-
-```{r}
-path <- file.path('Datasets', 'NPScosts.dat')
-df <- read.table(path, header=TRUE)
-
-summary(df)
-dim(df)
-head(df)
-tail(df)
-par(mfrow=c(1,1))
-plot(df)
-```
-
-The dataset and the model were already partially investigated in Exercise 3 from week 1. We take off where we ended there.
-
-### Exercise 4.a)
-First a variable selection gets perfomed on the model built in Exercise 3 week 1 (including the performed variable transformations).
-```{r}
-df$lCost <- log(df$cost)
-df$lCap <- log(df$cap)
-df$sCum.n <- sqrt(df$cum.n)
-
-mod3.1 <- lm(lCost ~ date + t1 + t2 + lCap + pr + ne + ct + bw + sCum.n + pt,
-             data = df)
-summary(mod3.1)
-
-step(mod3.1, scope = list(upper =~ date + t1 + t2 + lCap + pr + ne + ct + bw + sCum.n + pt,
-                             lower =~ 1))
-```
-
-Starting from the full model the stepwise variable selection suggests the following model:
-lCost = date + t2 + lCap + pr + ne + ct + sCum.n + pt
-and therewith drops just 2 variables (t1 & bw) and results in an AIC of -110.01.
-
-What if we start with an empty model and perform the variable selection?
-```{r}
-step(lm(lCost ~ 1, data = df),
-     direction = 'both',
-     scope = list(upper =~ date + t1 + t2 + lCap + pr + ne + ct + bw + sCum.n + pt,
-                  lower =~ 1))
-```
-
-This puts out 
-lCost = pt + lCap + date + ne + ct + sCum.n
-and drops 4 variables (t1, t2, bw & pr) with an AIC of -110.35. Therewith one can conclude that the second model is more parsimonious than the first because its lower AIC.
-
-### Exercise 4.b)
-What about the residual and sensitivity analysis?
-```{r}
-lm3.2 <- lm(lCost ~ pt + lCap + date + ne + ct + sCum.n, data = df)
-summary(lm3.2)
-
-par(mfrow=c(2,4))
-plot(lm3.2)
-plot.lmSim(lm3.2, SEED = 1)
-```
-
-There is no evidence that any of the model assumptions is violated. What about multicollinearity?
-```{r}
-vif(lm3.2)
-```
-
-There is also no problem with multicollinearity. One can conclude therewith that the model fits the data well.
-
-### Exercise 4.c)
-```{r}
-confint(lm3.2)
-```
-
-### Question to 4.c)
-How do we see with the output above, that pt affects the price significantly?
 
