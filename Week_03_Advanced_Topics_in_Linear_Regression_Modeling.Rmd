@@ -38,7 +38,6 @@ There seems to be some strong correlation between x2 and Y but withing x1 and x2
 library(robustbase)
 rlm1.1 <- lmrob(Y ~ x1 + x2, data = df)
 summary(rlm1.1)
-coef(rlm1.1)
 ```
 
 8 observations were identified as outliers from the MM-Estimator. The $R^{2}$ has a pretty good score of 0.986.
@@ -80,7 +79,7 @@ The intercept is way higher which shows a much flater line. Also the estmators f
 ```{r}
 par(mfrow=c(2,4))
 plot(lm1.1)
-plot.lmSim((lm1.1), SEED = 1)
+plot.lmSim(lm1.1, SEED = 1)
 ```
 
 Surprisingly there is no evidence that any of the model assumptions (constant expactation of residual, gaussien distributed residuals and constant residual variance) is violated. Also there are no too influential residuals with Cook's distance > 1.
@@ -95,9 +94,84 @@ The residual and sensitivity analysis shows no model violations of both model (r
 path <- file.path('Datasets', 'ExpressDS.dat')
 df <- read.table(path, header=TRUE)
 
-
 summary(df)
 str(df)
 head(df)
 tail(df)
 plot(df)
+```
+
+Data looks alright.
+
+### Exercise 2.a)
+Apply Tukey's firs-aid transformations to the data and checking if the transformations are suitable with an additive model.
+```{r}
+df$lWeight <- log(df$weight)
+df$lDistance <- log(df$distance)
+df$lCost <- log(df$cost)
+
+library(gam)
+gam1.1 <- gam(lCost ~lo(lWeight) + lo(lDistance), data = df)
+summary(gam1.1)
+
+par(mfrow=c(2,2))
+plot(gam1.1, se = TRUE)
+plot(gam1.1, se = TRUE, residuals = TRUE)
+```
+
+**Rule of Thumb:** If a straight line fits between the confidence band the variable fits and does not need any further transformation.
+
+According to the rule of thumb lDist does not need any further transformation, but lWeight does.
+
+Lets try how the untransformed explanatory variable weight looks in the model:
+```{r}
+gam1.2 <- gam(lCost ~ lo(weight) + lo(lDistance), data = df)
+summary(gam1.2)
+
+par(mfrow=c(2,2))
+plot(gam1.2, se = TRUE)
+plot(gam1.2, se = TRUE, residuals = TRUE)
+```
+
+Like that a straight line fits also between the confidence bands of weight and therefore weight gets untransformed into the model.
+
+### Exercise 2.b)
+```{r}
+lm2.1 <- lm(lCost ~ weight + lDistance, data = df)
+summary(lm2.1)
+
+par(mfrow=c(2,4))
+plot(lm2.1)
+plot.lmSim(lm2.1, SEED = 1)
+```
+
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows a decreasing trend which is, however in the stochastic fluctuation. Observation i=9 seems to be an oulier.\
+=> The assumption of constant expactation is not violated.
+2.  Q-Q plot: The data scatters nicely around the straight line (except i=9) and seems to be within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors seems not violated.
+3.  Scale-location plot: The smoother has a strong decrease in the first half and levels out afterwards and stays almost within the stochastic fluctuation.\
+=> There is no (real) evidence against the assumption of constant variance of the residuals.
+4.  Residuals vs. Leverage: All observations have Cook's Distance <1 and therewith no too influential points.\
+=> No too influential (dangerous) observations
+
+*CONCLUSION*: The model does fit but there might be an outlier (obs i=9). Lets try to remedy this with an robust estimator.
+
+### Exercise 2.c)
+```{r}
+library(robustbase)
+rlm2.1 <- lmrob(lCost ~ weight + lDistance, data = df)
+summary(rlm2.1)
+```
+
+Indeed observation i=9 is a strong outlier. So we fit the linear model again without it and check the model assumptions again.
+```{r}
+lm2.2 <- lm(lCost ~ weight + lDistance, data = df[-9,])
+summary(lm2.2)
+
+par(mfrow=c(2,4))
+plot(lm2.2)
+plot.lmSim(lm2.2, SEED = 1)
+```
+
+Like that none of the model assumptions is violated and no outlier is visible. So this model fits the data more adequately.
