@@ -32,6 +32,8 @@ plot(df)
 ```
 
 There seems to be some strong correlation between x2 and Y but withing x1 and x2 seems not to be a problem with multicollinearity. We fit an robust MM-Estimator model to the data.
+
+### Exercise 1.a)
 ```{r}
 library(robustbase)
 rlm1.1 <- lmrob(Y ~ x1 + x2, data = df)
@@ -50,8 +52,52 @@ The estimated standard dviation of the error is 1.111.
 
 Residual ans sensitivity analysis:
 ```{r}
-par(mfrow=c(2,4))
+par(mfrow=c(2,3))
 plot(rlm1.1)
-plot.lmrob(rlm1.1)
 ```
 
+The graphic top left replaces the classical graphic "Residuals against leverage". Robust distances measures the outlyingness of observations in the x-space. It replaces the classical measure of leverage, H_ii,  and is not distorted by outliers. The two dotted horizontal lines is the band 0 +/- 2.5 sigma^. Most residuals should be within this band. All residuals
+right of the dotted vertical line are leverage points; i.e. they are too far from the bulk of the data.
+
+In all of the five graphics, 8 distinct outliers are visible. Hence the residuals are not Gaussian distributed. The is a slight decreasing trend visible in the last graphic. Hence, it might be that the variance is not constant. But the hint is weak. There is no evidence that the expectation is not constant. Conclusion: There are 8 distinct outliers. Inferential results must be based on robust estimation. Least squares estimation will not deliver
+reliable results.
+
+### Exercise 1.b)
+Fit the above model again but with the lest squares method.
+```{r}
+lm1.1 <- lm(Y ~ x1 + x2, data = df)
+summary(lm1.1)
+```
+
+The $R^{2}$ crashes to the half of the value than with the robust MM-estimator and the residual standard error increases to 5.799
+
+Coefficients:
+```{r}
+coef(lm1.1)
+```
+
+The intercept is way higher which shows a much flater line. Also the estmators for $\beta_1$ and $\beta_2$ are very different than from the robust estimator. Lets perform a residual and sensitivity analysis:
+```{r}
+par(mfrow=c(2,4))
+plot(lm1.1)
+plot.lmSim((lm1.1), SEED = 1)
+```
+
+Surprisingly there is no evidence that any of the model assumptions (constant expactation of residual, gaussien distributed residuals and constant residual variance) is violated. Also there are no too influential residuals with Cook's distance > 1.
+
+### Exercise 1.c)
+The residual and sensitivity analysis shows no model violations of both model (robust estmator as well as the least squares fit). The only 2 ways to know, that the fit of least squares is not adequat is by identifying the outliers in the robust method and the rather low $R^{2}$ in the summary of the least squares fit. This is crucial to find out when modeling and one should therfore always use at least for adequacy checking of the linear model as well fit a robust estimator in the end.
+
+## Exercise 2
+#### Dataset loading and sanity check:
+
+```{r}
+path <- file.path('Datasets', 'ExpressDS.dat')
+df <- read.table(path, header=TRUE)
+
+
+summary(df)
+str(df)
+head(df)
+tail(df)
+plot(df)
