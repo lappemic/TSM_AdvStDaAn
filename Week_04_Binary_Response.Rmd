@@ -21,7 +21,7 @@ source('Specific_R_functions/RFn_Plot-lmSim.R')
 #### Dataset loading and sanity check:
 
 ```{r, out.width='100%'}
-path <- file.path('Datasets', 'Synthetic.dat')
+path <- file.path('Datasets', 'turbines.dat')
 df <- read.table(path, header=TRUE)
 
 summary(df)
@@ -31,8 +31,18 @@ tail(df)
 plot(df)
 ```
 
+The data looks fine.
 
 ### Exercise 1.a)
 ```{r}
+par(mfrow=c(1,1))
+plot(df$Hours, df$Fissures/df$Turbines)
 ```
+
+This plot does not show the density per observation. So one might consider an alternative plot where the densitiy is visualized as well.
+```{r}
+sunflowerplot(df$Hours, df$Fissures/df$Turbines, 
+              number = df$Turbines, las = 1)
+```
+
 
