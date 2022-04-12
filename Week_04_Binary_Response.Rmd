@@ -1,0 +1,38 @@
+---
+title: "**AdvStDaAn, Worksheet, Week 4**"
+author: "Micheal Lappert"
+date: '12.04.2022'
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+  html_document:
+    toc: yes
+    toc_depth: 3
+  '': default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source('Specific_R_functions/RFn_Plot-lmSim.R')
+```
+
+## Exercise 1
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'Synthetic.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+dim(df)
+head(df)
+tail(df)
+plot(df)
+```
+
+
+### Exercise 1.a)
+```{r}
+```
+
