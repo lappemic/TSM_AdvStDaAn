@@ -25,13 +25,13 @@ path <- file.path('Datasets', 'turbines.dat')
 df <- read.table(path, header=TRUE)
 
 summary(df)
-dim(df)
+str(df)
 head(df)
 tail(df)
 plot(df)
 ```
 
-The data looks fine.
+The data is ascending sorted in hours and looks fine.
 
 ### Exercise 1.a)
 ```{r}
@@ -45,4 +45,25 @@ sunflowerplot(df$Hours, df$Fissures/df$Turbines,
               number = df$Turbines, las = 1)
 ```
 
+### Exercise 2.b)
+Let $Y_i$ be the number of wheels with fissures. Then\
+$Y_i$ ~ independent Binomial($\pi_i$, #Turbines)\
+with\
+$log(\frac{pi_i}{1-pi_i}) = \beta_0 + \beta_1 * Hours$
 
+```{r}
+glm1.1 <- glm(cbind(Fissures, Turbines-Fissures) ~ Hours, family = binomial, data = df)
+summary(glm1.1)
+```
+
+### Exercise 2.b)
+```{r}
+coef(glm1.1)
+```
+
+$log(\frac{pi_i}{1-pi_i}) = -3.9235965551 + 0.0009992372 * Hours$\
+
+Henc the probability of fissures increases by a facotr of exp(0.0009992372) = ´r exp(0.0009992372)´
+
+### Question 2.b)
+How do we know that the increase of the probability of fissures is related to 100 hours? Why not per 1 hour?
