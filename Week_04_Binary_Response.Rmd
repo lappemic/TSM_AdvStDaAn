@@ -45,25 +45,185 @@ sunflowerplot(df$Hours, df$Fissures/df$Turbines,
               number = df$Turbines, las = 1)
 ```
 
-### Exercise 2.b)
+The sunflowerplot is better suited for this purpose: The more 'lines' are at one postiion, the more observations are there.
+
+### Exercise 1.b)
 Let $Y_i$ be the number of wheels with fissures. Then\
 $Y_i$ ~ independent Binomial($\pi_i$, #Turbines)\
 with\
-$log(\frac{pi_i}{1-pi_i}) = \beta_0 + \beta_1 * Hours$
+$log(\frac{\pi_i}{1-\pi_i}) = \beta_0 + \beta_1 * Hours$
 
 ```{r}
 glm1.1 <- glm(cbind(Fissures, Turbines-Fissures) ~ Hours, family = binomial, data = df)
 summary(glm1.1)
 ```
 
-### Exercise 2.b)
+### Exercise 1.c)
 ```{r}
 coef(glm1.1)
 ```
 
-$log(\frac{pi_i}{1-pi_i}) = -3.9235965551 + 0.0009992372 * Hours$\
+$log(\frac{\pi_i}{1-\pi_i}) = -3.9235965551 + 0.0009992372 * Hours$\
 
-Henc the probability of fissures increases by a facotr of exp(0.0009992372) = ´r exp(0.0009992372)´
+Hence the probability of fissures increases by a facotr of exp(0.0009992372) = `r exp(0.0009992372)`
 
-### Question 2.b)
+### Question 1.c)
 How do we know that the increase of the probability of fissures is related to 100 hours? Why not per 1 hour?
+
+### Exercise 1.d)
+```{r}
+preds1 <- predict(glm1.1, type = "response", newdata = data.frame(Hours = 3000))
+```
+
+The estimated probability of a 'defective' turbine wheel with operation time 3'000 is `r preds1`
+
+### Exercise 1.e)
+```{r}
+sunflowerplot(df$Hours, df$Fissures/df$Turbines, 
+              number = df$Turbines, las = 1,
+              ylim = c(0, 1), xlim = c(0, 10000))
+dfPred <- data.frame(Hours = seq(from = 0, to = 10000, by = 10))
+preds2 <- predict(glm1.1, type = 'response', newdata = dfPred)
+lines(dfPred$Hours, preds2, col = 4)
+abline(h = c(0.1, 0.3, 0.5, 0.7, 0.9), lty = 2, col = 5)
+```
+
+### Exercise 1.f)
+Fitting the logistic regression model with the probit and the cloglog link functions.
+```{r}
+glm1.probit <- glm(cbind(Fissures, Turbines-Fissures) ~ Hours, 
+                   family = binomial(link = probit),
+                   data = df)
+
+glm1.cloglog <- glm(cbind(Fissures, Turbines-Fissures) ~ Hours, 
+                   family = binomial(link = cloglog),
+                   data = df)
+
+```
+
+The coefficients of the models are:\
+log-log: `r coef(glm1.1)`\
+probit: `r coef(glm1.probit)`\
+cloglog: `r coef(glm1.cloglog)`\
+The coefficients of the log-log and the cloglog model are similar, whereas the probit models has lower coefficients.
+
+Predicting and plotting the corresponding curves of the different models.
+```{r}
+predsProbit <- predict(glm1.probit, type = 'response', newdata = dfPred)
+predsCloglog <- predict(glm1.cloglog, type = 'response', newdata = dfPred)
+
+sunflowerplot(df$Hours, df$Fissures/df$Turbines, 
+              number = df$Turbines, las = 1,
+              ylim = c(0, 1), xlim = c(0, 10000))
+lines(dfPred$Hours, preds2, col = 4)
+lines(dfPred$Hours, predsProbit, col = 6, lty = 2)
+lines(dfPred$Hours, predsCloglog, col = 8, lty = 3)
+legend(x = 1, y = 1, legend = c('log-log', 'probit', 'clog-log'),
+       col = c(4, 6, 8),
+       lty = c(1, 2, 3))
+```
+
+Looking at the plot the before stated picture changes: The log-log and the probit model look more similar than the corresponding clog-log model. -> When comparing models, rather look at the corresponding curves than the coefficients!
+
+## Exercise 2
+#### Dataset loading and sanity check:
+```{r}
+path <- file.path('Datasets', 'birth-weight.dat')
+df <- read.table(path, header = TRUE)
+
+str(df)
+head(df)
+tail(df)
+plot(df)
+```
+
+The data seems to be sorted in weight and also some correlation between Y and the explanatory variables seems obvious.
+
+### Exercise 2.a)
+```{r}
+sunflowerplot(df$weight, df$Y/df$m,
+              number = df$m, 
+              las = 1, ylim = c(0,1))
+```
+
+### Question 2.a)
+Why is for the calculation of the empirical logits the formula like this? Why not only:\
+log((Y+0.5)/(m))
+-> And why is the +0.5?
+```{r}
+yel <- log((df$Y+0.5)/(df$m-df$Y+0.5))
+sunflowerplot(x=df$weight, y=yel, number=df$m, ylab="Empirical Logits")
+```
+
+This does not look like a linear relationship. So one would try an additional transformation.
+```{r}
+sunflowerplot(x=log(df$weight), y=yel, number=df$m, ylab="Empirical Logits")
+```
+
+This looks much better. So we transform weight in the dataset
+```{r}
+df$lWeight <- log(df$weight)
+```
+
+### Exercise 2.b)
+Fitting the model using the least squares approach with empirical logits.
+```{r}
+lm2.1 <- lm(yel ~ lWeight, data = df)
+summary(lm2.1)
+```
+
+Plotting the resulting regression line in the previous plot.
+```{r}
+sunflowerplot(x=df$lWeight, y=yel, number=df$m, ylab="Empirical Logits")
+abline(lm2.1, col = 'blue')
+```
+
+Display data and fit in the response scale
+```{r}
+sunflowerplot(x=df$lWeight, y=df$Y/df$m, number=df$m,
+              xlab="log(Weight)", ylab="Survival Probability")
+x <- seq(min(df$lWeight), max(df$lWeight), length=50)
+mu.logit.p <- predict(lm2.1, newdata=data.frame(lWeight=x))
+
+# Back-transformation into the response scale:
+lines(x, 1/(1+exp(-mu.logit.p)), col="blue", lwd=2, lty=6)
+```
+
+### Exercise 2.c)
+Fitting the glm:
+```{r}
+glm2.1 <- glm(cbind(Y, m-Y) ~ lWeight, family = binomial, data = df)
+```
+
+Display data and both fits in the logitic scale:
+```{r}
+sunflowerplot(x=df$lWeight, y=yel, number=df$m,
+              xlab="log(Weight)", ylab="Empirical Logits")
+abline(lm2.1, col="blue", lwd=4, lty=6)
+abline(coef(glm2.1), col="magenta", lwd=4) ## glm fit
+
+```
+
+Two almost paralell lines.
+
+Display data and both fits in the response scale:
+```{r}
+sunflowerplot(x=df$lWeight, y=df$Y/df$m, number=df$m,
+              xlab="log(Weight)", ylab="Survival Probability")
+x <- seq(min(df$lWeight), max(df$lWeight), length=50)
+mu.logit.p <- predict(lm2.1, newdata=data.frame(lWeight=x))
+lines(x, 1/(1+exp(-mu.logit.p)), col="blue", lwd=4, lty=6)
+mu.glm.p <- predict(glm2.1, newdata=data.frame(lWeight=x), type="response")
+lines(x, mu.glm.p, col="magenta", lwd=4)
+```
+
+Difference in the fits is small. It might be that the glm fit fits better on the r.h.s.
+
+Display data and both fits in a scatterplot of the response against Weights:
+```{r}
+sunflowerplot(x=df$weight, y=df$Y/df$m, number=df$m,
+              xlab="Weight", ylab="Survival Probability")
+lines(exp(x), 1/(1+exp(-mu.logit.p)), col='blue', lwd=4, lty=6)
+lines(exp(x), mu.glm.p, col="magenta", lwd=4) ## from GLM
+```
+
