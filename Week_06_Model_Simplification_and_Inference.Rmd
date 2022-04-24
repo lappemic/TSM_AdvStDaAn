@@ -1,0 +1,340 @@
+---
+title: "**AdvStDaAn, Worksheet, Week 5**"
+author: "Michael Lappert"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+  html_document:
+    toc: yes
+    toc_depth: 3
+  '': default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source('Specific_R_functions/RFn_Plot-lmSim.R')
+```
+
+## Exercise 1
+
+### Question 1 a) and b)
+How do we come to this solution? 
+
+## Exercise 2
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'Dial-a-ride.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+str(df)
+head(df)
+tail(df)
+plot(df)
+```
+
+
+### Exercise 2.a)
+IND is a factor and should be transformed therefore.
+```{r}
+df$facIND <- as.factor(df$IND)
+df$IND
+```
+
+Lets look at the data in histogramms:
+```{r}
+par(mfrow=c(2,4))
+for (i in 1:(ncol(df)-1)){
+  hist(df[,i], col = 'gray',
+  main = paste('Histogramm of', names(df)[i]))
+}
+```
+
+Some of the variables seem to have values out of the normal range. Let's find out which:
+```{r}
+which((df$AR > 200) | (df$RDR > 1500))
+```
+
+### Exercise 2.b)
+Fitting an ordinary linear regression model to all the data without any transformations:
+```{r}
+lm2.1 <- lm(RDR ~ POP + AR + HR + VH + F + facIND, data = df)
+summary(lm2.1)
+```
+
+The model seems the data not to fit very adequately. But lets perform a residual and sensitivity analysis first:
+```{r}
+par(mfrow=c(2,4))
+plot(lm2.1)
+plot.lmSim(lm2.1, SEED = 1)
+```
+
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother has a strong banana form and lies outside the stochastic fluctuation -> outlier in observations i=1, 53.\
+=> The assumption of constant expactation is violated.
+2.  Q-Q plot: The residuals lie until the last three observations on the r.h.s. nicely on a straight line but observations 1 and 53 are again outliers. Additionally the residuals are outside of the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors is violated.
+3.  Scale-location plot: The smoother has the strong form of a tick mark with outlier 53. The smoother lies outside of the stochastic fluctuation.\
+=> There is evidence against the assumption of constant variance of the residuals.
+4.  Residuals vs. Leverage: No observation hat Cook's Distance > 1 and would therefore be too influential.\
+=> No too influential (dangerous) observations
+
+*CONCLUSION*: The model does not fit adequately the data.
+
+### Exercise 2.c)
+Trying to improve the linear regression model by applying Tukey's First-Aid transformatinos:
+```{r}
+# Square root for counts
+df$sRDR <- sqrt(df$RDR)
+df$sVH <- sqrt(df$VH)
+df$sPOP <- sqrt(df$POP)
+
+# And log for continuous values
+df$lAR <- log(df$AR)
+```
+
+Then using the results of additive model fitting:
+```{r}
+library(gam)
+gam2.1 <- gam(sRDR ~ lo(sPOP) + lo(lAR) + lo(HR) + lo(sVH) + lo(F) + facIND,
+              data = df, bf.maxit = 100)
+par(mfrow=c(2,3))
+plot(gam2.1, se = TRUE)
+```
+
+The plots do not look very promissing: A straight line could not be drawn in HR and F. Therefore the model fits the data not adequately.
+
+Lets try a robust fitting method:
+```{r}
+library(robustbase)
+lmrob2.1 <- lmrob(sRDR ~ sPOP + lAR + HR + sVH + F + facIND, data = df)
+summary(lmrob2.1)
+```
+
+3 observations are outliers (i = 1, 45, 53) with weight = 0 ( < 0.0019)
+
+Lets try how the linear model looks when we exclude these found outliers
+```{r}
+df1 <- df[-c(1, 45, 53),]
+lm2.3 <- lm(sRDR ~ sPOP + lAR + HR + sVH + F + facIND, data = df1)
+summary(lm2.3)
+
+par(mfrow=c(2,4))
+plot(lm2.3)
+```
+
+This model looks adequate: No model assumptions seem to be violated.
+
+### Exercise 2.d)
+### Question 2.d)
+How do we get to this model? Why do we log transform all of the variables? And how do we perform the residual and sensitivity analysis (simulation does not work)?
+```{r}
+df$lPOP <- log(df$POP)
+df$lAR <- log(df$AR)
+df$lHR <- log(df$HR)
+df$lVH <- log(df$VH)
+df$lF <- log(df$F)
+
+glm2.2 <- glm(RDR ~ lPOP + lAR + lHR + lVH + lF + IND,
+                 family=poisson, data=df)
+summary(glm2.2)
+
+par(mfrow=c(2,4))
+plot(glm2.2)
+```
+
+
+## Exercise 3
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'bacteria.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+str(df)
+head(df)
+tail(df)
+par(mfrow=c(1,1))
+plot(df)
+hist(df[, 'N'])
+```
+
+Datset is sorted in Time  and in a string decrease in N in the beginning is apparent.
+
+### Exercise 3.a)
+- Response: N\
+- Distribution: Poisson\
+- Explanatory variables: Time\
+- Link function: log()\
+
+### Exercise 3.b)
+```{r}
+glm3.1 <- glm(N ~ Time, family = poisson, data = df)
+summary(glm3.1)
+```
+
+We should be able to interpret the following output part:
+<!-- Coefficients: -->
+<!--              Estimate Std. Error z value Pr(>|z|) -->
+<!-- (Intercept)  5.981772   0.041902  142.76   <2e-16 *** -->
+<!-- Time        -0.218920   0.007414  -29.53   <2e-16 *** -->
+<!-- --- -->
+Time as explanatory variable is significant on the 5% level.
+
+The initial amount of bacteria is exp(5.981772) = `r floor(exp(coef(glm3.1)[1]))`
+
+Lets plot the model:
+```{r}
+plot(df$Time, df$N, xlim = c(0, 15), ylim = c(0, 400))
+dfPreds3.1 <- data.frame(Time = seq(0, 15, length = 50))
+predsGlm3.1 <- predict(glm3.1, type = 'response', 
+                   newdata = dfPreds3.1)
+lines(dfPreds3.1$Time, predsGlm3.1, col = 'red', lty = 2)
+```
+
+### Exercise 3.c)
+```{r}
+names(summary(glm3.1))
+summary(glm3.1)$coefficients
+(xx <- summary(glm3.1)$coefficients[2,1:2])
+xx[1] + c(-1,1)*1.96*xx[2]
+
+confint(glm3.1, 2)
+```
+
+## Exercise 4
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'transactions.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+str(df)
+head(df)
+tail(df)
+par(mfrow=c(1,1))
+plot(df)
+par(mfrow=c(1,3))
+for (i in 1:ncol(df)){
+  hist(df[,i], col = 'gray',
+       main = paste('Histogramm of', names(df)[i]))
+}
+```
+
+Data looks ok even Time and Type1 look kind of left skewed.
+
+### Exercise 4.a)
+```{r}
+summary(df)
+par(mfrow=c(1,3))
+for (i in 1:ncol(df)){
+  hist(df[,i], col = 'gray',
+       main = paste('Histogramm of', names(df)[i]))
+}
+
+```
+
+### Exercise 4.b)
+```{r}
+lm4.1 <- lm(Time ~ ., data = df)
+summary(lm4.1)
+```
+
+On the first sight the model looks not to bad with both explanatory variables as significant and an $R^{2}$ of `r round(as.numeric(summary(lm4.1)['r.squared']), 3)`.  
+
+But lets look at it in the residual and sensitivity analysis:
+```{r}
+par(mfrow=c(2,4))
+plot(lm4.1)
+plot.lmSim(lm4.1, SEED = 1)
+```
+
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother is a straight line and lies perfectly in the stochastic fluctuation.\
+=> The assumption of constant expactation is not violated.
+2.  Q-Q plot: The residuals deviate in on the r.h.s. and the l.h.s. from the straight line and are not within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors is violated.
+3.  Scale-location plot: The smoother has a strong increasing trend which is outside the stochastic fluctuation.\
+=> The assumption of constant variance of the residuals is violated.
+4.  Residuals vs. Leverage: No observation hat Cook's Distance > 1 and would therefore be too influential.\
+=> No too influential (dangerous) observations.\
+
+*CONCLUSION*: The model does not fit adequately the data.
+
+### Exercise 4.c)
+- Distribution: Gamma\
+- Link function: $-\frac{1}{\mu}$
+### Question 4.c)
+Why is the link function identity and not $-\frac{1}{\mu}$?\
+```{r}
+glm4.1 <- glm(Time ~ ., family = Gamma(link = identity), data = df)
+summary(glm4.1)
+```
+
+## Exercise 5
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'nambeware.txt')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+str(df)
+head(df)
+tail(df)
+par(mfrow=c(1,1))
+plot(df)
+
+library(purrr)
+library(tidyr)
+library(ggplot2)
+df %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+```
+
+Type is a factor variable, so lets transform it to that:
+```{r}
+df$Type <- as.factor(df$Type)
+unique(df$Type)
+```
+
+### Exercise 5.a)
+```{r}
+glm5.1 <- glm(Time ~ Diam + Type, family = Gamma(link=log), data = df)
+summary(glm5.1)
+coef(glm5.1)
+```
+
+### Exercise 5.b)
+The expected response is\
+Time = exp(2.548 + 0.076 * Diam + $\beta_2$)
+which is\
+Time = exp(2.548) * exp(0.076 * Diam) * exp($\beta_2$)\
+where $\beta_2$ depends wether Type is `r unique(df$Type)`
+
+Interpreting a gamma regression model with linear predictor:
+```{r}
+glm5.2 <- glm(Time ~ Diam * Type, family = Gamma(link=log), data = df)
+summary(glm5.2)
+```
+
+This model is identical to\
+Time = 1 + Diam + Type + Diam:Type
+
+Like that the estimated expected response is not just affected by a factor expt($\beta_2$) but also the factor exp($\beta_1$*Diam) depends on the type of product because the slope $\beta_1$ depends on the type of the product.\
+So the coefficients 'Type...' get added to the intercept and the coefficients 'Diam:...' get added to the slope of Diam ($\beta_1$) depending on the corresponding Type.
+```{r}
+library(lattice)
+xyplot(Time ~ Diam | Type, data=df, col=2)
+```
+
+Works?
