@@ -1,0 +1,45 @@
+---
+title: "**AdvStDaAn, Worksheet, Week 7**"
+author: "Michael Lappert"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+  html_document:
+    toc: yes
+    toc_depth: 3
+  '': default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source('Specific_R_functions/RFn_Plot-lmSim.R')
+library(purrr)
+library(tidyr)
+library(ggplot2)
+```
+
+## Exercise 1
+### Exercise 1.a)
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'turbines.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+str(df)
+head(df)
+tail(df)
+plot(df)
+
+df %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+```
+
+
