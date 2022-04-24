@@ -15,13 +15,16 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 source('Specific_R_functions/RFn_Plot-lmSim.R')
+library(purrr)
+library(tidyr)
+library(ggplot2)
 ```
 
 ## Exercise 1
 #### Dataset loading and sanity check:
 
 ```{r, out.width='100%'}
-path <- file.path('Datasets', 'Dial-a-ride.dat')
+path <- file.path('Datasets', 'baby.dat')
 df <- read.table(path, header=TRUE)
 
 summary(df)
@@ -29,4 +32,163 @@ str(df)
 head(df)
 tail(df)
 plot(df)
+
+df %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
 ```
+
+### Exercise 1.a)
+```{r}
+glm1.1 <- glm(Survival ~ ., family = binomial, data = df)
+summary(glm1.1)
+```
+
+On a first sight, just Weight and Age seem to be sifnificant on the 5% significance level. To test this hypothesis, one must perform a statistical test:
+
+Since (from the summary output)
+```{r}
+1-pchisq(319.28-236.14, df=246-241) # Compare slide 12&13 from w6
+```
+
+is smaller than the significant level of 5%, we cannot drop all explanatory variables. At least one of them is significant.
+
+Or without plugging in the numbers explicitly (same as above in other synthax):
+```{r}
+(h <- summary(glm1.1)$null.deviance - summary(glm1.1)$deviance)
+1 - pchisq(h, 246-241)
+```
+
+
+This test is identical to
+```{r}
+glm1.2 <- glm(Survival ~ 1, family=binomial, data = df)
+anova(glm1.1, glm1.2, test="Chisq")
+```
+
+Where we also conclude that since the p-value of 2.2e-16 is << than the significance level of 0.05 to reject the null hypothesis and assume that the first (full) model describes the data more adequately than the second (empty) one and therefore at least one variable is of significance.
+
+### Questions1.a)
+- How do we already now, that the response is Bernoulli distributed?\
+
+### Exercise 1.b)
+Performing a stepwise variable selection.
+```{r}
+glm.step1.1 <- step(glm1.1, scope = list(upper =~ .,
+                                         lower =~ 1),
+                    direction = 'both')
+summary(glm.step1.1)
+```
+
+The variables Agpar5 and pH got dropped.
+
+### Exercise 1.c)
+Fitting a model with the explanatory variables Weight and Age and comparing it with anova at the 5% significance level.
+```{r}
+glm1.3 <- glm(Survival ~ Weight + Age, family = binomial, data = df)
+summary(glm1.3)
+anova(glm1.1, glm1.3, test = 'Chisq')
+```
+
+Since the p-value is 0.29 and therefore bigger than the significance level of 5% the null Hypothesis can not be rejected concluding that both models describe the data in the same adequacy. Therefore one can conclude that the model 'Survival ~ Weight + Age' describes the data statistically equally well as the full one.
+
+## Exersice 2
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'twomodes.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+str(df)
+head(df)
+tail(df)
+plot(df)
+
+df %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+```
+
+### Exercise 2.a)
+- Response: Failures
+- Distribution: Poisson
+- Explanatory variables: mode1 & mode2
+- Link function: ~~log~~ -> rather identity, because one rather wants a direct influence of the operating time on the failure rate in each mode. This choice is supported by the fact that both operating times are positive explanatory variables, and thus, with positive parameter values, the linear predictor is also positive. Therefore, the link "identity" guarantees a positive failure rate.-- But the log link is not excluded by these arguments!
+
+### Question 2.a)
+What is a good suggestion of the procedure to finde the right model parameters like distribution and especially link function?
+
+### Exercise 2.b)
+Fit the suggested model in a):
+```{r}
+glm2.1 <- glm(Failures ~ ., family = poisson(link = 'identity'), data = df)
+summary(glm2.1)
+```
+
+Since the coefficients have positive signs and therefore are positive linear predictors the signs are correct.
+
+### Exercise 2.c)
+Another model that can be considered, as stated in the worksheet, uses neither an intercept nor the explanatory variable *mode2*; that is,
+*Failures ~ -1 + mode1*
+
+What are the pros and cons of this reduced model?
+
+- Pros
+  + in practical application, it has been repeatedly shown that the intercept collects systematic errors in both the response and the explanatory variables, which would be avoided this way
+- Cons
+  + The intercept must be interpreted somehow, but is not included in this model
+  
+Fitting the suggested model and comparing it to the original one fitted in b):
+```{r}
+glm2.2 <- glm(Failures ~ -1 + Mode1, family = poisson(link = 'identity'), data = df)
+summary(glm2.2)
+```
+
+### Question 2.c)
+Is this explanation right, why the Null deviance is inf?
+The null deviance is Inf (infinite) because it describes the residuals with only the intercept and because there is no intercept in this model, the model has no residuals there.
+
+```{r}
+anova(glm2.1, glm2.2, test = 'Chisq')
+```
+
+Since the p-value of the newly suggested (reduced) model is 0.06972 and therefore > than the significance level of 5% we can not reject the null Hypothesis and conclude, that both models describe the model statistically equally well.
+
+## Exercise 3
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'nambeware.txt')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+str(df)
+head(df)
+tail(df)
+plot(df)
+
+df %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+```
+
+### Exercise 3.a)
+Testing the if the model using the linear predictor 'Diam * Type' describe the data of Nambeware better than the model with the linear predictor 'Diam + Type':
+```{r}
+glm3.1 <- glm(Time ~ Diam * Type, family = Gamma(link = log), data = df)
+glm3.2 <- glm(Time ~ Diam + Type, family = Gamma(link = log), data = df)
+
+anova(glm3.1, glm3.2, test = 'Chisq')
+```
+
+Since the p-value of the second model is > than the significance level of 5% we can not reject the null Hypothesis and conclude that both models describe the data equally well and use therefore the reduced model (glm3.2).
