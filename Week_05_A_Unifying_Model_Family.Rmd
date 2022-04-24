@@ -337,4 +337,4 @@ library(lattice)
 xyplot(Time ~ Diam | Type, data=df, col=2)
 ```
 
-
+Works?
