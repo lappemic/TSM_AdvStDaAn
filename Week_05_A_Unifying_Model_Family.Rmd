@@ -1,6 +1,6 @@
 ---
 title: "**AdvStDaAn, Worksheet, Week 5**"
-author: "Micheal Lappert"
+author: "Michael Lappert"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   pdf_document:
@@ -300,4 +300,41 @@ df %>%
     facet_wrap(~ key, scales = "free") +
     geom_histogram()
 ```
+
+Type is a factor variable, so lets transform it to that:
+```{r}
+df$Type <- as.factor(df$Type)
+unique(df$Type)
+```
+
+### Exercise 5.a)
+```{r}
+glm5.1 <- glm(Time ~ Diam + Type, family = Gamma(link=log), data = df)
+summary(glm5.1)
+coef(glm5.1)
+```
+
+### Exercise 5.b)
+The expected response is\
+Time = exp(2.548 + 0.076 * Diam + $\beta_2$)
+which is\
+Time = exp(2.548) * exp(0.076 * Diam) * exp($\beta_2$)\
+where $\beta_2$ depends wether Type is `r unique(df$Type)`
+
+Interpreting a gamma regression model with linear predictor:
+```{r}
+glm5.2 <- glm(Time ~ Diam * Type, family = Gamma(link=log), data = df)
+summary(glm5.2)
+```
+
+This model is identical to\
+Time = 1 + Diam + Type + Diam:Type
+
+Like that the estimated expected response is not just affected by a factor expt($\beta_2$) but also the factor exp($\beta_1$*Diam) depends on the type of product because the slope $\beta_1$ depends on the type of the product.\
+So the coefficients 'Type...' get added to the intercept and the coefficients 'Diam:...' get added to the slope of Diam ($\beta_1$) depending on the corresponding Type.
+```{r}
+library(lattice)
+xyplot(Time ~ Diam | Type, data=df, col=2)
+```
+
 
