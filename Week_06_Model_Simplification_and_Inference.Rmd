@@ -280,3 +280,87 @@ preds2 <- predict(glm4.2, type="link",
 The 95% confidence interval covers almost the whole support except the area to 0. But the probability that an o-ring will fail may be close to 1! There is not much confidence that the o-ring will sustain.
 
 ### Exercise 4.d)
+Repeating the above analysis with just those observatinos in which at least one failure occured:
+```{r}
+df2 <- df[(df$Fails != 0), ]
+str(df2)
+summary(df2)
+nrow(df) - nrow(df2)
+nrow(df2)
+
+glm4.3 <- glm(cbind(Fails, m-Fails) ~ Pres + Temp,
+              family = binomial(link = logit), data = df2)
+glm4.4 <- glm(cbind(Fails, m-Fails) ~ Temp,
+              family = binomial(link = logit), data = df2)
+glm4.5 <- glm(cbind(Fails, m-Fails) ~ 1,
+              family = binomial(link = logit), data = df2)
+
+anova(glm4.3, glm4.4, test = 'Chisq')
+```
+
+The two model describe the data statistically equally well, so we use the reduced one.
+```{r}
+anova(glm4.4, glm4.5, test = 'Chisq')
+```
+
+Also this models describe the data statistically equally well, so we would again use the reduced one (with just the intercept...). Justify this by a variable selection with step():
+```{r}
+step(glm4.3)
+```
+
+The best model is again the one with just the intercept. So we could start at any temperature.
+
+95% confidence interval for the probability of a defect o-ring:
+```{r}
+preds3 <- predict(glm4.5, newdata=data.frame(Temp=31), type="link", se=T)
+family(glm4.5)$linkinv(preds3$fit + c(-1,1) * qnorm(0.975) * preds3$se.fit)
+
+```
+
+To compare with CI based on glm4.2
+```{r}
+preds4 <- predict(glm4.2, newdata=data.frame(Temp=31), type="link", se=T)
+family(glm4.2)$linkinv(preds4$fit + c(-1,1) * qnorm(0.975) * preds4$se.fit)
+```
+
+this one is much wider than the one before.
+
+(from solutions)\
+Based on this "reduced" dataset, one could easily be convinced that temperature does not affect O-ring performance. Hence, based on this "reduced" dataset the conclusion which the scientists and engineers drew was correct.
+
+But, when you conduct a statistical analysis on a sample of the available data, you can induce what in statistics is known as a sample selection problem. Running an analysis on less than the entire data set is not always a problem, but it can lead to mistaken conclusions depending on the question you are trying to answer.
+
+Lessons learned:
+1. Be very, very careful when predicting "out-of-sample" support.
+2. Don't sample when all data points are available ... all launches, not just ones with O-ring distress.
+
+
+### Exercise 4.e) (copied from solutions)
+Display the data properly assuming just an eﬀect of temperature on the response and overlay the corresponding ﬁt using all data or the reduced dataset. In addtion, overlay both 95% conﬁdence intervals at a temperature of 31 ◦ F. What do you conclude from this?
+```{r}
+h.xlim <- c(30, max(df$Temp))
+new.df <- data.frame(Temp=seq(h.xlim[1], h.xlim[2], length=50))
+h.predGLM2 <- predict(glm4.2, newdata=new.df, type="response")
+h.pred1GLM2 <- predict(glm4.4, newdata=new.df, type="response")
+
+sunflowerplot(df$Temp, df$Fails/df$m, number=df$m, las=1,
+              xlim=h.xlim, ylim=c(0,1))
+## fit
+lines(new.df$Temp, h.predGLM2, col="blue")
+lines(new.df$Temp, h.pred1GLM2, col="red")
+legend(x=50, y=1, legend=c("Fit using all data", "Fit using reduced dataset"),
+       col=c("blue", "red"), lty=c(1,1))
+
+## confidence intervals
+h2 <- predict(glm4.2, newdata=data.frame(Temp=31), type="link", se=T)
+h2.ci <- family(glm4.2)$linkinv(h2$fit + c(-1,1)*qnorm(0.975)*h2$se.fit)
+h12 <- predict(glm4.4, newdata=data.frame(Temp=31), type="link", se=T)
+h12.ci <- family(glm4.4)$linkinv(h12$fit + c(-1,1)*qnorm(0.975)*h12$se.fit)
+
+lines(c(31,31), h2.ci, col="blue", lwd=2)
+lines(c(31.3,31.3), h12.ci, col="red", lwd=2)
+
+```
+
+Both confidence intervals are huge indicating that there is a great uncertainty in the predicted probabilities independent of the applied fit.
+
