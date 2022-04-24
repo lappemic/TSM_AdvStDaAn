@@ -192,3 +192,91 @@ anova(glm3.1, glm3.2, test = 'Chisq')
 ```
 
 Since the p-value of the second model is > than the significance level of 5% we can not reject the null Hypothesis and conclude that both models describe the data equally well and use therefore the reduced model (glm3.2).
+
+## Exercise 4
+#### Dataset loading and sanity check:
+
+```{r, out.width='100%'}
+path <- file.path('Datasets', 'O-rings.dat')
+df <- read.table(path, header=TRUE)
+
+summary(df)
+str(df)
+head(df)
+tail(df)
+plot(df)
+
+df %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram()
+
+par(mfrow=c(1,1))
+sunflowerplot(df$Temp, df$Fails/df$m, number=df$m, las=1)
+```
+
+### Exercise 4.a)
+- Response: Fails
+- Distribution: binomial with expectation mu=pi_i and size=m_i
+- Explanatory Variables: m, Temp, Pres
+- Link function: canonical link because there is none mentioned explicitly. But alternative:     + complementary log-log link because the topic is material fatigue
+- Model: 
+    + glm(cbind(Failures, m-Failures) ~ Temp + Pres, family = binomial(link = logit), data = df)
+    
+### Question 4.a)
+How do we knoe that the link function is logit? With just stated to use the canonical link, as in the solutions, to me is not clear why logit is the reasonable choice.
+
+### Exercise 4.b)
+Fit the model proposed in a)
+```{r}
+glm4.1 <- glm(cbind(Fails, m-Fails) ~ Temp + Pres, family = binomial(link = logit),
+              data = df)
+summary(glm4.1)
+```
+
+The relevance of the pressure at which safety testing for field join leaks was performed to the failure process was unclear. The p-value of Pres is > than the significance level of 5% and we conclude that it is not significant to describe the data (Wald statistics). But lets compare another model without the pressure to the first model.
+
+```{r}
+glm4.2 <- glm(cbind(Fails, m-Fails) ~ Temp, family = binomial(link = logit), data = df)
+anova(glm4.1, glm4.2, test = 'Chisq')
+```
+
+Since the p-value of 0.2174 is > than the significance level of 5% we can not reject the null hypothesis and conclude that both models describe the data statistically equally well and can use in practice the reduced one (based on the preferred deviance statistics here). However, we do not know what risk of using the reduced model is (i.e. the probability of type II error)
+
+Testing using the confidence intervals
+Wald:
+```{r}
+(h <- summary(glm4.1)$coefficients)
+h[3,1] + c(-1,1)*qnorm(0.975) * h[3,2]  ##  -0.0053  0.0200
+```
+
+The 95% confidence interval  covers the null hypothesis 'beta1 = 0' (0 is between -0.0053 and 0.02). Hence we have no evidence against the null hypothesis.
+
+Deviance (via profiling):
+```{r}
+confint(glm4.1)
+```
+This 95% confidence interval ([-0.004030283,  0.02272544]) covers the null hypothesis 'beta1 = 0' as well. So we obtain the same conclusion.
+
+### Exercise 4.c)
+Predict the probability that an O-ring will leak at the expected tempreature of 31°F at launch.
+```{r}
+preds1 <- predict(glm4.2, type = 'response', 
+                   se.fit = TRUE, newdata = data.frame(Temp = 31))
+preds1$fit
+preds1$fit + c(-1, 1) * qnorm(0.975) * preds1$se.fit
+```
+
+This leads to a very large confidence interval and lies not within the support of [0,1]. Therefore we try another approach:
+```{r}
+preds2 <- predict(glm4.2, type="link",
+                  se.fit = TRUE, newdata=data.frame(Temp=31))
+(preds2adj <- preds2$fit + c(-1,1) * qnorm(0.975) * preds2$se.fit)
+1/(1 + exp(-preds2adj))
+```
+
+The 95% confidence interval covers almost the whole support except the area to 0. But the probability that an o-ring will fail may be close to 1! There is not much confidence that the o-ring will sustain.
+
+### Exercise 4.d)
