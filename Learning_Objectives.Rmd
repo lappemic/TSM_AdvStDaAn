@@ -49,3 +49,8 @@ knitr::opts_chunk$set(echo = TRUE)
 - You can understand AIC is generalised to GLMs
 - You know when you can apply Wald-type confidence intervals and when it is better to use deviance based confidence intervals
 - You can apply the introduced methods in statistical data analysis using R
+
+## Week 7
+- You know what overdispersion is and can identify it
+- You can check the model adequacy
+- ... and determine which model assumptions, if any, are violated
