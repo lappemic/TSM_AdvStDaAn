@@ -15,31 +15,45 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 source('Specific_R_functions/RFn_Plot-lmSim.R')
-library(purrr)
-library(tidyr)
-library(ggplot2)
+source('Specific_R_functions/RFn_Plot-glmSim.R')
 ```
 
 ## Exercise 1
 ### Exercise 1.a)
+Turbine Data (cf. Exercise 1 on Worksheet Week 4) Does the GLM that you have ﬁtted in part 1(b) model the data adequately?
 #### Dataset loading and sanity check:
 
 ```{r, out.width='100%'}
 path <- file.path('Datasets', 'turbines.dat')
 df <- read.table(path, header=TRUE)
 
-summary(df)
-str(df)
-head(df)
-tail(df)
-plot(df)
-
-df %>%
-  keep(is.numeric) %>% 
-  gather() %>% 
-  ggplot(aes(value)) +
-    facet_wrap(~ key, scales = "free") +
-    geom_histogram()
+# Fitted model in w4, 1.b)
+glm1.1 <- glm(cbind(Fissures, Turbines-Fissures) ~ Hours, family = binomial, data = df)
+summary(glm1.1)
 ```
 
+Because the response is binomially distributed with m > 1, we can test on overdispersion:
+```{r}
+1-pchisq(10.331, 9) # if resulting value > 0.05 -> no overdispersion
+```
+
+Because the p-value is > than the significance level of 5% we have no evidence against the null hypothesis that $\phi$ = 1 -> no overdispersion.
+```{r}
+qchisq(0.95, df=9) # if resulting value > Residual deviance -> no overdispersion
+```
+
+Because the residual deviance is smaller than $q^{\chi^2_9}_{0.95}$ the null hypothesis that $\phi$ = 1 cannot be rejected -> no overdispersion.\
+
+***
+### Question 1.a)
+*Is the conclusion in the two cells abvoe right? Are these two different methods to come to the same result (looking for overdispersion)?*
+
+***
+
+Performing a residual and sensitivity analysis for the fitted model:
+```{r}
+par(mfrow=c(2,4))
+plot(glm1.1)
+plot.glmSim(glm1.1, SEED = 1)
+```
 
