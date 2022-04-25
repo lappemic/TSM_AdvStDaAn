@@ -54,3 +54,10 @@ knitr::opts_chunk$set(echo = TRUE)
 - You know what overdispersion is and can identify it
 - You can check the model adequacy
 - ... and determine which model assumptions, if any, are violated
+
+## Week 8
+- You know what a rate models is and how you can analyse it with GLM
+- You know how a quasi model extends a GLM and when you can apply it
+- You know that conﬁdence tables can be analysed with an extention of GLM
+- You know multinomial and ordinal regression and the diﬀerence between these two models
+- You can ﬁt these methods to data using R, interpret the results, make inference statements and predictions.
