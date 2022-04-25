@@ -57,6 +57,11 @@ The two parts consist of the following detailed program.
     7.2.2 Do the basic diagnostic plots still work?<br/>
   7.3 Generalised Additive Models (GAM)<br/>
   
+8. Some Extensions of Basic GLM<br/>
+  8.1 Rate Models<br/>
+  8.2 Quasi Approach<br/>
+  8.3 Multinomial Models<br/>
+  
 ## Part II
 
 
