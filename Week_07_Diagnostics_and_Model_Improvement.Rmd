@@ -21,9 +21,8 @@ source('Specific_R_functions/RFn_Plot-glmSim.R')
 ## Exercise 1
 ### Exercise 1.a)
 Turbine Data (cf. Exercise 1 on Worksheet Week 4) Does the GLM that you have ﬁtted in part 1(b) model the data adequately?
-#### Dataset loading and sanity check:
 
-```{r, out.width='100%'}
+```{r}
 path <- file.path('Datasets', 'turbines.dat')
 df <- read.table(path, header=TRUE)
 
@@ -38,6 +37,8 @@ Because the response is binomially distributed with m > 1, we can test on overdi
 ```
 
 Because the p-value is > than the significance level of 5% we have no evidence against the null hypothesis that $\phi$ = 1 -> no overdispersion.
+
+Or altenatively:
 ```{r}
 qchisq(0.95, df=9) # if resulting value > Residual deviance -> no overdispersion
 ```
@@ -57,3 +58,16 @@ plot(glm1.1)
 plot.glmSim(glm1.1, SEED = 1)
 ```
 
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows a banana form, however in the stochastic fluctuation the smoother is not extreme.\
+=> The assumption of constant expactation is not violated.
+2.  Q-Q plot: The data scattersnot fully around the straight line but is within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors is violated.
+3.  Scale-location plot: The smoother has a banana form and stays within the stochastic fluctuation.\
+=> There is no evidence against the assumption of constant variance of the residuals.
+4.  Residuals vs. Leverage: All observations have Cook's Distance <1 and therewith no too influential points are present. Leverage points > 2 * `r length(glm1.1$coefficients)` [nr. of coefficients] / `r nrow(df)` [nr. of observations] = `r 2 * length(glm1.1$coefficients) / nrow(df)`.\
+=> No too influential (dangerous) observations
+
+
+
+*CONCLUSION*: The model does fit the data adequately.
