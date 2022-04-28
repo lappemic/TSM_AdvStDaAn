@@ -290,3 +290,66 @@ quantile(posteriorUnif,c(.05,.95))
 quantile(posteriorBeta,c(.05,.95))
 ```
 
+***
+### Question Task 5
+What is the learning here? What should be observed by comparing the built distributions to the one from the lecture?
+***
+
+## Task 6
+Perform a Bayesian data analysis to infer the fraction of voters in the population that favor party A, when you observe 68 people that prefer party A and 52 people that prefer party B (and people were randomly drawn from the population). Assume a Beta(40, 40) prior on the fration of voters that favor party A.
+
+***
+```{r}
+# Calculating the prior with beta distribution
+n = 100000
+prior = rbeta(n, 40, 40)
+hist(prior)
+
+# Define the generative model
+generativemodel <- function(theta){
+  rbinom(1, 120, theta)
+}
+
+# Simulate and store data using parameters from the prior and the generative model: 
+simdata <- rep(NA, n)
+for(i in 1:n){
+  simdata[i] <- generativemodel(prior[i])
+}
+
+# Filter out all draws that do not match the data:
+posterior <- prior[simdata == 68]
+length(posterior)
+
+par(mfrow=c(1,1))
+hist(posterior)
+abline(v = mean(posterior), col = "red", lty = 2)
+abline(v = quantile(posterior,c(.05,.95)), col = 'blue', lty = 4)
+
+mean(posterior)
+quantile(posterior,c(.05,.95))
+```
+
+What’s the probability that the fraction of supporters for party A is greater than the fraction of supporters for party B (if the population is large)?
+
+```{r}
+sum(posterior[posterior > 0.5]) / length(posterior)
+```
+
+The probability that the fraction of supporters for party A is greater thatn the fraction of supporters fo party B is `r round(sum(posterior[posterior > 0.5]) / length(posterior), 3)*100`%.
+
+Consider that 200 random individuals from the population are participating in the election (and the individuals are independent from the interviewed people). How many people will vote for party B? 
+
+Hint: The answer is not a single number but a distribution over probable number of voters for party B. Use the Binomial distribution.
+```{r}
+Bvoters <- rbinom(length(posterior), 200, 1-posterior)
+hist(Bvoters)
+floor(mean(Bvoters))
+floor(quantile(Bvoters, c(.05, .95))) # 90% equal-tailed credible interval
+```
+
+
+***
+### Question Task 6
+- Why did you choose a Beta(40, 40) distribution?
+
+***
