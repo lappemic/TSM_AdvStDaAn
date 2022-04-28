@@ -68,6 +68,33 @@ plot.glmSim(glm1.1, SEED = 1)
 4.  Residuals vs. Leverage: All observations have Cook's Distance <1 and therewith no too influential points are present. Leverage points > 2 * `r length(glm1.1$coefficients)` [nr. of coefficients] / `r nrow(df)` [nr. of observations] = `r 2 * length(glm1.1$coefficients) / nrow(df)`.\
 => No too influential (dangerous) observations
 
-
-
 *CONCLUSION*: The model does fit the data adequately.
+
+### Exercise 1.b)
+Premature Birth Data (cf. Exercise 2 on Worksheet Week 4) Does the logit model that you have ﬁtted in part 2(c) model the data adequately?
+```{r}
+path <- file.path('Datasets', 'birth-weight.dat')
+df <- read.table(path, header = TRUE)
+
+# Fitted moodel from 2.c), w4
+df$lWeight <- log(df$weight)
+glm2.1 <- glm(cbind(Y, m-Y) ~ lWeight, family = binomial, data = df)
+summary(glm2.1)
+
+# Checking for overdispersion
+1 - pchisq(8.7335, 8)
+```
+
+Because the p-value is > than the significance level of 5% we have no evidence against the null hypothesis that $\phi$ = 1 -> no overdispersion.
+
+Residual and sensitivity analysis:
+```{r}
+par(mfrow=c(2,4))
+plot(glm2.1)
+plot.glmSim(glm2.1, SEED = 1)
+```
+
+None of the model assumptions is violated, no leverage points (>`r 2 * length(glm1.1$coefficients) / nrow(df)`) and no observations with Cook's Distance > 1.
+
+-> The model fits the data adequately.
+
