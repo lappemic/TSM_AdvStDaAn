@@ -98,3 +98,21 @@ None of the model assumptions is violated, no leverage points (>`r 2 * length(gl
 
 -> The model fits the data adequately.
 
+### Exercise 1.c)
+```{r}
+path <- file.path('Datasets', 'Dial-a-ride.dat')
+df <- read.table(path, header=TRUE)
+df <- df[-c(1, 33, 35, 40, 45, 53),]
+
+df$sPOP <- sqrt(df$POP)
+df$lAR <- log(df$AR)
+df$hHR <- ifelse(df$VH <= 12,0,  df$HR - 12)
+df$hVH <- ifelse(df$VH <= 7,0,  df$VH - 7)
+df$fF <- as.factor(cut(df$F, breaks=c(0,0.1,0.4,0.7,1)))
+
+glm1.c <- glm(RDR ~ sPOP + lAR + HR + hHR + VH + hVH + fF + IND,
+                 family = poisson, data = df)
+summary(glm1.c)
+```
+
+Because the Residual deviance is > 10 times bigger than the corresponding degrees of freedom, it is very clear that there is overdispersion (-> When residual deviance is < than degrees of freedom, there is no overdispersion, otherwise there is.)
