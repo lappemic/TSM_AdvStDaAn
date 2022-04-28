@@ -129,8 +129,11 @@ plot(lm2.3)
 This model looks adequate: No model assumptions seem to be violated.
 
 ### Exercise 2.d)
+***
 ### Question 2.d)
 How do we get to this model? Why do we log transform all of the variables? And how do we perform the residual and sensitivity analysis (simulation does not work)?
+
+***
 ```{r}
 df$lPOP <- log(df$POP)
 df$lAR <- log(df$AR)
