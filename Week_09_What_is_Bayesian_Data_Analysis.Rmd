@@ -38,6 +38,12 @@ generativemodel = function(theta) {
 } 
 ```
 
+***
+### Question generative model
+Why did you choose n = 1 and size = 20 in rbinom()?
+- Answer: n = 1 because it is used in the for loop afterwards (so 1 simulation per n) and 20 because the email was sent to 20 people.
+***
+
 Simulate and store data using parameters from the prior and the generative model: 
 ```{r}
 simdata = rep(NA, n) 
@@ -84,3 +90,203 @@ sum(posterior[posterior > 0.2]) / length(posterior)
 ```
 
 So the probability that method A is better than telemarketing is `r round(sum(posterior[posterior > 0.2]) / length(posterior) * 100, 1)`%.
+
+## Task 3
+If method A was used on 100 people what would be the number of sign-ups?
+
+Hint 1: The answer is again not a single number but a distribution over probable number of sign-ups.
+
+Hint 2: As before, the binomial distribution is a good candidate for how many people that sign up out of the 100 possible.
+
+Hint 3: Make sure you don’t throw away uncertainty, for example by using a summary of the posterior distribution calculated in the ﬁrst question. Use the full original posterior sample!
+
+Hint 4: The general pattern when using the posterior distribution is to go through the sampled values one-by-one, and perform a transformation (say, plugging in the value in a binomial distribution), and collect the new values in a vector.
+
+***
+```{r}
+signups = rbinom(length(posterior), 100, posterior)
+hist(signups)
+```
+
+## Task 4
+Consider the case, you sent out ﬂyers to 160 randomly selected people and 60 out of 160 recipients signed up.
+
+Calculate the posterior distribution of the signup rate $\theta$ and compare it with our original posterior distribution (6 out of 16 signups). Plot the two resulting posterior distributions, based on a uniform prior. Calculate and compare the posteriori means and the equal-tailed credible intervals.
+
+What’t the maximum likelihood estimate for the signup rate $\theta$ in both cases?
+
+***
+First calculating the original data (6 signups out of 16)
+```{r}
+# Simulate n1 random draws from the prior:
+n1 = 1000
+prior1 = runif(n1)
+hist(prior1) # Eyball the prior
+
+# Define the generative model:
+generativemodel1 <- function(theta) {
+  rbinom(1, 16, theta)
+}
+
+# Simulate and store data using parameters from the prior and the generative model: 
+simdata1 <- rep(NA, n1)
+for(i in 1:n1) {
+  simdata1[i] <- generativemodel1(prior1[i])
+}
+
+# Filter out all draws that do not match the data:
+posterior1 <- prior1[simdata1 == 6]
+length(posterior1)
+```
+
+Second calculate the second case with 60 signups out of 160:
+```{r}
+# Simulate n2 random draws from the prior:
+n2 = 1000
+prior2 = runif(n2)
+hist(prior2) # Eyball the prior
+
+# Define the generative model:
+generativemodel2 <- function(theta) {
+  rbinom(1, 160, theta)
+}
+
+# Simulate and store data using parameters from the prior and the generative model: 
+simdata2 <- rep(NA, n2)
+for(i in 1:n2) {
+  simdata2[i] <- generativemodel2(prior2[i])
+}
+
+# Filter out all draws that do not match the data:
+posterior2 <- prior2[simdata2 == 60]
+length(posterior2)
+```
+
+Then comparing the resulting posteriors:
+```{r}
+par(mfrow=c(1,2))
+# Hisogram posterior1
+hist(posterior1)
+abline(v = mean(posterior1), col = "red", lty = 2)
+abline(v = quantile(posterior1,c(.05,.95)), col = 'blue', lty = 4)
+
+# Hisogram posterior2
+hist(posterior2)
+abline(v = mean(posterior2), col = "red", lty = 2)
+abline(v = quantile(posterior2,c(.05,.95)), col = 'blue', lty = 4)
+
+# Means of posteriors
+mean(posterior1)
+mean(posterior2) 
+
+# Equal-tailed credible intervals
+quantile(posterior1,c(.05,.95))
+quantile(posterior2,c(.05,.95))
+```
+
+The higher we would set n1/n2 the closer the means and quantiles would get. Because they are acually from the same distribution they have also the same maximum likelihood estmate -> 6/16 = 60/160 = `r 60/160`
+
+## Task 5
+Design a prior for the signup rate, that is uniformly distributed between [0.1, 0.5].
+
+Design a prior for the signup rate from the beta family of distributions with expectation 0.2 and standard deviation 0.1.
+
+Calculate a posterior sample for the signup rate with each of the above priors and observed 6 out of 16 signups. Compare the resulting posterior distribution with a Beta(2, 20) prior on the signup rate (see lecture).
+
+***
+```{r}
+n = 1000
+
+# Prior uniformly distributed between 0.1 and 0.5
+priorUnif = runif(n, min = 0.1, 0.5)
+hist(priorUnif)
+```
+
+Prior from the beta family with expectation 0.2 and sd = 0.1 (standard deviation is the square root of the variance)
+
+For this we have to solve the equation system of two equations for (expected value and variance of the beta distribution)
+
+$\frac{a}{a+b} = 0.1$ and $\frac{a*b}{(a+b+1)(a+b)^{2}} = 0.1^2$
+
+so 
+
+$b = 4a$ 
+
+and plotting this into the variance function results in 
+
+$\frac{4a^{2}}{(5a+2)(5a)^{2}} = 0.1^{2}$
+$4a^{2} = 0.1^{2} * (5a+1)(5a)^{2}$
+$400a^{2} = (5a+1)(5a)^{2}$
+$a = 3$
+
+plugging this in the expected value function then gives
+
+$b = 12$
+
+We can this now use to compute the beta prior:
+```{r}
+a = 3
+b = 12
+priorBeta = rbeta(n, a, b)
+hist(priorBeta)
+```
+
+from here on we proceed as seen before for both priors
+**Uniform prior**
+```{r}
+# Define the generative model:
+generativemodelUnif <- function(theta) {
+  rbinom(1, 16, theta)
+}
+
+# Simulate and store data using parameters from the prior and the generative model: 
+simdataUnif <- rep(NA, n)
+for(i in 1:n) {
+  simdataUnif[i] <- generativemodelUnif(priorUnif[i])
+}
+
+# Filter out all draws that do not match the data:
+posteriorUnif <- priorUnif[simdataUnif == 6]
+length(posteriorUnif)
+```
+
+**Beta prior**
+```{r}
+# Define the generative model:
+generativemodelBeta <- function(theta) {
+  rbinom(1, 16, theta)
+}
+
+# Simulate and store data using parameters from the prior and the generative model: 
+simdataBeta <- rep(NA, n)
+for(i in 1:n) {
+  simdataBeta[i] <- generativemodelBeta(priorUnif[i])
+}
+
+# Filter out all draws that do not match the data:
+posteriorBeta <- priorBeta[simdataBeta == 6]
+length(posteriorBeta)
+```
+
+Looking at the results:
+```{r}
+par(mfrow=c(1,2))
+# Hisogram posteriorUnif
+hist(posteriorUnif, xlim = c(0,1))
+abline(v = mean(posteriorUnif), col = "red", lty = 2)
+abline(v = quantile(posteriorUnif,c(.05,.95)), col = 'blue', lty = 4)
+
+# Hisogram posteriorBeta
+hist(posteriorBeta, xlim = c(0,1))
+abline(v = mean(posteriorBeta), col = "red", lty = 2)
+abline(v = quantile(posteriorBeta,c(.05,.95)), col = 'blue', lty = 4)
+
+# Means of posteriors
+mean(posteriorUnif)
+mean(posteriorBeta) 
+
+# Equal-tailed credible intervals
+quantile(posteriorUnif,c(.05,.95))
+quantile(posteriorBeta,c(.05,.95))
+```
+
