@@ -371,3 +371,47 @@ plot(gam3c, se = TRUE, residuals = TRUE)
 ```
 
 The estimated curve can be approximated well by a straight line and therefore no transformation is needed.
+
+### Exercise 3.d)
+Find approximate 95% Wald conﬁdence intervals on the slope parameter and compare it with the corresponding 95% proﬁle conﬁdence interval.
+
+**Wald Confidence Interval (CI)**
+```{r}
+coefWald <- summary(glm3b)$coefficients
+round(c(coefWald[1] - 1.96 * coefWald[2], coefWald[1] + 1.96 * coefWald[2]), 4)
+```
+
+**Profile CI**
+```{r}
+confint(glm3b)[2,]
+```
+
+Algorithm need more iterations as can be seen in the warning message. So we fit the model again with more iterations:
+```{r}
+glm3b <- glm(Y ~ x, family = Gamma(link=identity), data = df, maxit = 500)
+round(confint(glm3b)[2,], 4)
+```
+
+On the lower end a small difference can be seen. On the higher end the estimated CI's are the same. Since we have more confidenct in the profiling approach we would further proceed with the profiling CI.
+
+### Exercise 3.e)
+Could the response (Y) be exponentially distributed? (Please note all steps of your consideration.)
+
+If the response is exponentially distributed then the dispersion parameter is fixed at 1: So we can test the null hypothesis phi=1 as in the Poisson and the binomial case.
+
+From the summary output we have:\
+Residual deviance: 18.05  on 51  degrees of freedom
+
+Since the residual deviance is outside of the acceptance region:
+```{r}
+qchisq(c(0.025,0.975), 51)
+
+```
+
+the null hypothesis must be rejected on the 5% level. Hence the response cannot be exponentially distributed, it must be a gamma distribution.
+
+***
+### Question 3.e)
+- Could you explain this exercise in detail? Why would the dispersion parameter be fixed at 1 when the response is exponentially distributed? And how do we come up with the right test (qchisq())?
+
+***
