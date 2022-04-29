@@ -116,3 +116,258 @@ summary(glm1.c)
 ```
 
 Because the Residual deviance is > 10 times bigger than the corresponding degrees of freedom, it is very clear that there is overdispersion (-> When residual deviance is < than degrees of freedom, there is no overdispersion, otherwise there is.)
+
+```{r}
+par(mfrow=c(2,4))
+plot(glm1.c)
+plot.glmSim(glm1.c, SEED = 1)
+```
+
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows an M form which is outside the stochastic fluctuation.\
+=> The assumption of constant expactation is violated.
+2.  Q-Q plot: The data scatters around the straight line but is by far not within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors is violated.
+3.  Scale-location plot: The smoother has a v form and is way above the stochastic fluctuation.\
+=> The assumption of constant residual variance is violated.
+4.  Residuals vs. Leverage: There are several observations with Cook's Distance >1 and therewith  too influential points are present. Leverage points > 2 * `r length(glm1.c$coefficients)` [nr. of coefficients] / `r nrow(df)` [nr. of observations] = `r 2 * length(glm1.c$coefficients) / nrow(df)` are also apparent.\
+=> There are too influential (dangerous) observations present
+
+*CONCLUSION*: The model does not fit the data adequately at all.
+
+-> Better model is presented in the slides of week 8.
+
+### Exercise 1.d)
+```{r}
+df <- read.table("Datasets/transactions.dat", header=T)
+str(df)
+glm1.d  <- glm(Time ~ Type1 + Type2, family=Gamma(link=identity), data=df)
+summary(glm1.d)
+1-pchisq(7.478, 258)
+```
+
+There is no overdispersion present (p-value > 0.05).
+
+Residual and sensitivity analysis:
+```{r}
+par(mfrow=c(2,4))
+plot(glm1.d)
+plot.glmSim(glm1.d, SEED = 1)
+
+```
+
+#### Interpretation
+Tukey Anscombe and Q-Q plot look fine. But the smoother in the scale location plot is outside the stochastic fluctuation. Even none of the observations has Cook's Distance > 1 in the Residuals vs. Leverage plot there are some leverage points apparent with leverage > `r 2 * length(glm1.c$coefficients) / nrow(df)` but they are not dangerous
+
+*CONCLUSION*: The model might not fit the data fully adequat.
+
+### Exercise 1.e)
+```{r}
+df <- read.table("Datasets/nambeware.txt", header=T)
+summary(df)
+
+glm1.d <- glm(Time ~ Diam + Type, family=Gamma(link=log), data=df)
+summary(glm1.d)
+par(mfrow=c(2,4))
+plot(glm1.d,
+     panel = function(x,y) panel.smooth(x, y, iter = 1, span = 0.6))
+plot.glmSim(glm1.d, SEED = 1,
+            smoother = function(x,y) lowess(x, y, iter = 1, f = 0.6))
+
+```
+
+#### Interpretation
+None of the model assumptions is violated. There are 2 leverage points with leverage > `r 2 * length(glm1.d$coefficients) / nrow(df)`.
+
+*CONCLUSION:* The model might be adequate.
+
+## Exercise 2
+In this exercise, data are presented on the number of fractures (Y) that occur in the upper seams of coal mines in the Appalachian region of western Virginia. Four explanatory variables were reported:
+
+INB       inner burden thickness [feet], the shortest distance between seam ﬂoor and the
+          lower seam
+
+EXTRP     percent extraction of the lower previously mined seam
+
+sHeight   lower seam height [feet]
+
+oTime     time [year] that the mine has been in operation
+
+***
+
+```{r}
+path <- file.path('Datasets', 'mine.dat')
+df <- read.table(path, header = TRUE)
+str(df)
+```
+
+### Exercise 2.a)
+Execute the following R command:
+```{r}
+glm2a <- glm(Y ~ INB + EXTRP + oTime, family = poisson, data = df)
+summary(glm2a)
+```
+
+- The response $Y_i$ is ~ Pois($\lambda_i$), independent with $E(Y_i) = \mu_i$. 
+- The explanatory variables are IND, EXTRP and oTimes. 
+- A linear combination of them yield the linear predictor $\eta_i$. 
+- The canonical link, log(), is used: log($\mu_i$) = $\eta_i$
+- Estimated coefficients:\
+`r summary(glm2a)$coefficients[, 1]`
+
+### Exercise 2.b)
+Does the residual deviance indicate that the model from part (a) is satisfactory?
+
+The residual deviance is smaller then the degrees of freedom -> so yes this is satisfactory because no overdispersion is present.
+
+### Exercise 2.c)
+Find approximate 95% Wald conﬁdence intervals on the model parameters and compare them with the 95% proﬁle conﬁdence intervals.
+
+Wald confidence intervals
+```{r}
+coffs <- summary(glm2a)$coefficients
+round(cbind(coffs[,1] - 1.96 * coffs[,2], coffs[,1] + 1.96 * coffs[,2]), 4)
+```
+
+Profile confidence intervals:
+```{r}
+round(confint(glm2a), 4)
+```
+
+There are slight differences in the results. Since we would trust more the profiling data, we would youse this values for further proceedings.
+
+### Exercise 2.d)
+Perform a thorough residual analysis of the ﬁtted model from part (a).
+```{r}
+par(mfrow=c(2,4))
+plot(glm2a)
+plot.glmSim(glm2a, SEED = 1)
+```
+
+#### Interpretation
+There is evidence in the Tukey Anscombe plot that the assupmtion of constant expactation of the error is violated since the smoother is outside the stochastic fluctuation. The other model assumptions are within the stochastic fluctuation and no observation with Cook's Distance > 1 is visible.
+
+*CONCLUSTION*: The model might not fit the data fully adequat. -> Trying to improve the model in e)
+
+### Exercise 2.e)
+Improve the model from a).
+```{r}
+library(gam)
+gam2e <- gam(Y ~ lo(INB) + lo(EXTRP, span=0.7) + lo(oTime), family=poisson,
+                data=df, bf.maxit=500)
+par(mfrow=c(2,2))
+plot(gam2e, se=TRUE, residuals=TRUE)
+```
+
+The plots do not strongly indicate the needs of transforming INB. But the log-transformation of INB will improve the plots. The variable EXTRP needs a transformation. For lack of a better solution, an upside-down hockey stick transformation is applied. (This needs some
+justifications by the subject matter experts.)
+
+***
+### Question 2.e)
+- What does an upside-down hockey stick transformation mean? Why are we allowed to transform the explanatory variables like that? Does it not completely change the data?
+
+***
+```{r}
+df$lINB <- log(df$INB)
+df$tEXTRP <- ifelse(df$EXTRP >= 75, 75, df$EXTRP)
+
+# Fitting again the model
+glm2e <- glm(Y ~ lINB + tEXTRP + oTime, family=poisson, data=df)
+summary(glm2e)
+```
+
+Summary looks just fine except, that according to Walds p-value at least one of the explanatory variable would be superfluous.
+
+```{r}
+par(mfrow=c(2,4))
+plot(glm2e,
+     panel = function(x,y) panel.smooth(x, y, iter = 1, span = 0.6))
+plot.glmSim(glm2e, SEED = 1,
+            smoother = function(x,y) lowess(x, y, iter = 1, f = 0.8))
+
+```
+
+This's much better. Since the structures are within the stochastic fluctuations, there is no evidence that the model is not yet adaquate. According to the Wald-type inference results there are at least one non-significant explanatory variable:
+```{r}
+step(glm2e)
+```
+
+According to the AIC all explanatory variables are needed.
+
+## Exercise 3
+An electric utility is interested in developing a model relating peak hour demand (Y) to total energy usage (x, in kilowatt-hours) during the month. This is an important planning problem because while most customers pay directly for energy usage, the generation system must be large enough to meet the maximum demand imposed.
+
+***
+```{r}
+path <- file.path('Datasets', 'eUsage.dat')
+df <- read.table(path, header = TRUE)
+str(df)
+```
+
+### Exercise 3.a)
+Assume that the response Y is independently Gaussian distributed and ﬁt a simple linear regression model. What are the estimated coeﬃcients?
+```{r}
+lm3a <- lm(Y ~ x, data = df)
+coef(lm3a)
+```
+
+Perform a thorough residual analysis. What are your conclusions?
+```{r}
+par(mfrow=c(2, 4))
+plot(lm3a)
+plot.lmSim(lm3a, SEED = 1)
+```
+
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows an increasing trend on the r.h.s. and the smoother itself is outside the stochastic fluctuation.\
+=> The assumption of constant expactation is violated.
+2.  Q-Q plot: The data scatters around the straight line and is within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors is not violated.
+3.  Scale-location plot: The smoother is not a straight line and is outside the stochastic fluctuation.\
+=> The assumption of constant residual variance is violated.
+4.  Residuals vs. Leverage: There are no observations with Cook's Distance >1 and therewith  no too influential points are present. Leverage points > 2 * `r length(lm3a$coefficients)` [nr. of coefficients] / `r nrow(df)` [nr. of observations] = `r 2 * length(lm3a$coefficients) / nrow(df)` is one apparent.\
+=> There are no too influential (dangerous) observations present
+
+*CONCLUSION*: The model does not fit the data adequately.
+
+### Exercise 3.b)
+Assume that the response Y is independently gamma distributed and use the identity link for ﬁtting the GLM. What are the estimated coeﬃcients?
+```{r}
+glm3b <- glm(Y ~ x, family = Gamma(link=identity), data = df)
+summary(glm3b)
+coef(glm3b)
+```
+
+The coefficient estimates are very similar to the ones in 3.a)
+
+Is this model more adequate?
+```{r}
+par(mfrow=c(2,4))
+plot(glm3b)
+plot.glmSim(glm3b, SEED = 1)
+```
+
+#### Interpretation:
+1.  Tukey-Anscombe plot: The smoother shows an almost straight line and is within the stochastic fluctuation.\
+=> The assumption of constant expactation is not violated.
+2.  Q-Q plot: The data scatters around the straight line and is within the stochastic fluctuation.\
+=> The assumption of Gaussian distributed errors is not violated.
+3.  Scale-location plot: The smoother is not a straight line and is outside the stochastic fluctuation.\
+=> The assumption of constant residual variance is violated.
+4.  Residuals vs. Leverage: There are no observations with Cook's Distance >1 and therewith  no too influential points are present. Leverage points > 2 * `r length(glm3b$coefficients)` [nr. of coefficients] / `r nrow(df)` [nr. of observations] = `r 2 * length(glm3b$coefficients) / nrow(df)` are 3 apparent but they do not harm.\
+=> There are no too influential (dangerous) observations present
+
+*CONCLUSION*: The model does not fit the data adequately. But maybe a bit better than the one in 3.a).
+
+### Exercise 3.c)
+Clarify with a “GAM-Fit” whether the explanatory variable should be transformed.
+```{r}
+library(gam)
+gam3c <- gam(Y ~ lo(x), family = Gamma(link = identity), data = df)
+summary(gam3c)
+
+par(mfrow=c(1,1))
+plot(gam3c, se = TRUE, residuals = TRUE)
+```
+
+The estimated curve can be approximated well by a straight line and therefore no transformation is needed.
