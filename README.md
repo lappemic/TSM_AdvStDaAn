@@ -6,7 +6,7 @@ Tracking excercises of MSE module Advanced Statistical Data Analyses of the MSc.
 
 The two parts consist of the following detailed program.
 
-## Part I: Advanced Regressino Modelling
+## Part I: Advanced Regression Modelling
 1. Introduction<br/>
 
 2. Review of Multiple Linear Regression<br/>
@@ -63,6 +63,10 @@ The two parts consist of the following detailed program.
   8.3 Multinomial Models<br/>
   
 ## Part II
-
-
-Note: This repository is for familiarization written in Markdown.
+1. What is Bayesian Data Analysis?<br/>
+  1.1 Frequentist Approach vs. Bayesian Data Analysis<br/>
+2. Swedish Fish Inc.'s Salmon signup model<br/>
+  2.1 Problem description<br/>
+  2.2 Bayesian Analysis<br/>
+3. Workflow of Bayesian Data Analysis<br/>
+  3.1 Recipe<br/>
