@@ -21,6 +21,7 @@ Study the inﬂuence of prior assumptions on the results of a Bayesian analysis.
 - method A: 6 out of 16 signed up and
 - method B: 10 out of 16 signed up.
 Use an uninformative prior, a Beta(2, 4) prior and the more informative Beta(3, 25) prior for the signup rates $\theta_A$ and $\theta_B$ and compare the resulting marginal posterior distributions.
+
 ***
 
 ```{r}
@@ -117,8 +118,8 @@ SingnupB = 10 # number of signups with method B
 
 # Simulate prior
 # Case 1
-# priorA = runif(nSamples,0,1)
-# priorB = runif(nSamples,0,1)
+priorA = runif(nSamples,0,1)
+priorB = runif(nSamples,0,1)
 # Case 2
 priorA = rbeta(nSamples,2,4)
 priorB = rbeta(nSamples,2,4)
@@ -133,7 +134,7 @@ simSingnupB = rbinom(nSamples,asked,priorB)
 
 # Condition on observed data
 ind = ( (simSingnupA==SingnupA) & (simSingnupB==SingnupB) )
-ind[1:20]
+
 margPosteriorA = priorA[ind]
 margPosteriorB = priorB[ind]
 
@@ -150,11 +151,72 @@ hist(margPosteriorB,xlim=0:1)
 abline(v=mean(margPosteriorB),col="red")
 abline(v=quantile(margPosteriorB,c(0.05,0.95)),col="blue")
 par(mfcol=c(1,1))
+print(mean(margPosteriorA)); mean(margPosteriorB)
 ```
 
 ***
+
 ## Question 2, Task 1
 > If i use a prior of beta(3, 25) i do not get any marginal posteriors. Why is that?
 > 
 
 ***
+
+## Task 2
+Evaluate the inﬂuence of prior assumptions and increasing data on the results of a Bayesian analysis. Consider Swedish Fish Inc. would have asked 32 (instead of 16) people, with the following results:
+- Method A: 12 out of 32 signed up and
+- method B: 20 out of 32 signed up.
+Again, use a uniform prior, a Beta(2, 4) prior and a Beta(3, 25) prior and compare the resulting marginal posterior distributions. Compare your results with the results from task 1.
+
+***
+```{r}
+# number of samples
+n <- 100000
+
+# Signups
+asked <- 32
+signupA <- 12
+signupB <- 20
+
+# Simulate just the prior you wish to investigate:
+## uniform prior
+priorA <- runif(n, 0, 1)
+priorB <- runif(n, 0, 1)
+
+## beta(2,4) prior
+priorA <- rbeta(n, 2, 4)
+priorB <- rbeta(n, 2, 4)
+
+## beta(3, 25) prior
+priorA <- rbeta(n, 3, 25)
+priorB <- rbeta(n, 3, 25)
+
+# simulate generative model
+simSignupA <- rbinom(n, asked, priorA)
+simSignupB <- rbinom(n, asked, priorB)
+
+# condition on observed data
+ind <- ( (simSignupA == signupA) & (simSignupB == signupB) )
+
+margPosteriorA <- priorA[ind]
+margPosteriorB <- priorB[ind]
+
+# inspect results
+par(mfrow=c(1,1))
+plot(margPosteriorA, margPosteriorB, xlim = c(0, 1), ylim = c(0, 1))
+abline(0, 1)
+
+par(mfrow=c(2, 1))
+hist(margPosteriorA, xlim = c(0, 1))
+abline(v = mean(margPosteriorA), col = 'red')
+abline(v = quantile(margPosteriorA, probs = c(0.05, 0.95)), col = 'blue')
+
+hist(margPosteriorB, xlim = c(0, 1))
+abline(v = mean(margPosteriorB), col = 'red')
+abline(v = quantile(margPosteriorB, probs = c(0.05, 0.95)), col = 'blue')
+
+print(paste('Mean marginal PosteriorA:', round(mean(margPosteriorA), 4)))
+print(paste('Mean marginal PosteriorB:', round(mean(margPosteriorB), 4)))
+```
+
+The differences compared to the first task are about 1%, so it is not that much of a difference.
