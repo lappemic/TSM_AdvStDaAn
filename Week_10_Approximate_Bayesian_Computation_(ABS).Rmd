@@ -144,10 +144,10 @@ plot(margPosteriorA,margPosteriorB,cex=1,pch=16,xlim=c(0,1),ylim=c(0,1))
 abline(0,1)
 
 par(mfcol=c(2,1))
-hist(margPosteriorA,xlim=0:1)
+hist(margPosteriorA, xlim=0:1)
 abline(v=mean(margPosteriorA),col="red")
 abline(v=quantile(margPosteriorA,c(0.05,0.95)),col="blue")
-hist(margPosteriorB,xlim=0:1)
+hist(margPosteriorB, xlim=0:1)
 abline(v=mean(margPosteriorB),col="red")
 abline(v=quantile(margPosteriorB,c(0.05,0.95)),col="blue")
 par(mfcol=c(1,1))
@@ -188,8 +188,8 @@ priorA <- rbeta(n, 2, 4)
 priorB <- rbeta(n, 2, 4)
 
 ## beta(3, 25) prior
-priorA <- rbeta(n, 3, 25)
-priorB <- rbeta(n, 3, 25)
+priorA <- rbeta(n, 10, 20)
+priorB <- rbeta(n, 10, 20)
 
 # simulate generative model
 simSignupA <- rbinom(n, asked, priorA)
@@ -207,11 +207,11 @@ plot(margPosteriorA, margPosteriorB, xlim = c(0, 1), ylim = c(0, 1))
 abline(0, 1)
 
 par(mfrow=c(2, 1))
-hist(margPosteriorA, xlim = c(0, 1))
+hist(margPosteriorA, xlim=0:1)
 abline(v = mean(margPosteriorA), col = 'red')
 abline(v = quantile(margPosteriorA, probs = c(0.05, 0.95)), col = 'blue')
 
-hist(margPosteriorB, xlim = c(0, 1))
+hist(margPosteriorB, xlim = 0:1)
 abline(v = mean(margPosteriorB), col = 'red')
 abline(v = quantile(margPosteriorB, probs = c(0.05, 0.95)), col = 'blue')
 
@@ -220,3 +220,18 @@ print(paste('Mean marginal PosteriorB:', round(mean(margPosteriorB), 4)))
 ```
 
 The differences compared to the first task are about 1%, so it is not that much of a difference.
+
+## Task 3
+John has two children. Given that at least one is a boy, what’s the probability he has two boys?
+
+Hint: Draw a tree.
+
+***
+$\Omega$ = {BB, BG, GB, GG}   -> All possibilities\
+A = {BB, BG, GB}              -> P(A) that at least one is a boy = 3/4 = 0.75\
+B = {BB}                      -> P(B) of two boys = 1/4 = 0.25
+B|A = {BB}|{BB, BG, GB}       -> P(B|A) that he has two boys given at least one is a boy = 1/3 = 0.33\
+
+P(B, A) = P(A) * P(B|A) = 0.75 * 0.33 = `r 0.75*1/3`
+
+
