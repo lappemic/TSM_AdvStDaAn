@@ -1,0 +1,25 @@
+---
+title: "**AdvStDaAn, Worksheet, Week 11**"
+author: "Michael Lappert"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+  html_document:
+    toc: yes
+    toc_depth: 3
+  '': default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Task 1
+
+***
+## Question Task 7
+|>Q: Why was a beta(12, 12) prior chosen?
+
+***
