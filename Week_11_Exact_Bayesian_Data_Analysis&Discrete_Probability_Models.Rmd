@@ -14,12 +14,58 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(scales)
 ```
 
 ## Task 1
+You can choose from two different types of light-emitting diodes.
+
+You order 100 diodes of type 1 and 100 diodes of type 2. 8 diodes of type 1 and 12 diodes of type 2 were insufﬁcient for your purposes. However diodes of type 2 are 10% cheaper.
+
+Is it beneﬁcial to buy diodes of type 2? Reject rates usually vary around 10% ± 5%. Propose an appropriate prior and perform a Bayesian analysis.
 
 ***
-## Question Task 7
-|>Q: Why was a beta(12, 12) prior chosen?
+First one can calculate a and b for the beta prior.
+
+$\frac{a}{a+b}$ = 0.1
+b = 9a
+
+$\frac{ab}{(a+b+1)(a+b)^{2}} = 0.05^{2}$
+
+set b = 9a
+
+$\frac{a*9a}{(a+9a+1)(a+9a)^{2}} = 0.05^{2}$ 
+a = 3.5
+b = 31.5
+
+```{r}
+# Simulate reject rates for diodes of type 1 and type 2
+nSamples = 100000
+postType1 = rbeta(nSamples, 3.5 +  8, 31.5 + 92)
+postType2 = rbeta(nSamples, 3.5 + 12, 31.5 + 88)
+
+hist(postType1, xlim = c(0, .5), col = 'blue', main = 'Histogram overlay of both priors')
+hist(postType2, xlim = c(0, .5), col = alpha('red', 0.5), add = TRUE)
+
+plot(postType1, postType2)
+abline(0,1,col="blue")
+sum(postType1< postType2)/nSamples
+
+# Calculate expected reject rates
+expType1 = (3.5 +   8)/ (3.5 +   8 +31.5 + 92) # -> E(X)
+expType2 = (3.5 +  12)/ (3.5 +  12 +31.5 + 88) # -> E(X)
+
+# To compare, include that diodes of type 2 are 10% cheaper
+(1-expType1)
+(1-expType2)/.9
+```
+
+=> Type 2 is better than Type 1.
+
+## Task 2
+***
+## Question Task 1
+|>Q: 
+
 
 ***
