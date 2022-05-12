@@ -34,8 +34,9 @@ $\frac{ab}{(a+b+1)(a+b)^{2}} = 0.05^{2}$
 
 set b = 9a
 
-$\frac{a*9a}{(a+9a+1)(a+9a)^{2}} = 0.05^{2}$ 
-a = 3.5
+$\frac{a*9a}{(a+9a+1)(a+9a)^{2}} = 0.05^{2}$\
+
+a = 3.5\
 b = 31.5
 
 ```{r}
@@ -63,7 +64,64 @@ expType2 = (3.5 +  12)/ (3.5 +  12 +31.5 + 88) # -> E(X)
 => Type 2 is better than Type 1.
 
 ## Task 2
+Given are 6 trials and their numbers of trys before a success occurs: 5, 8, 3, 9, 2 and 6.
+
+- In what range is the rate of success $\theta$?
+- What’s the probability, that the rate of success is bigger than 25%?
+
 ***
+```{r}
+n <- 6
+obs <- c(5, 8, 3, 9, 2, 6)
+obs_sum <- sum(obs)
+obs_sum
+# calculating the range of the rate of success 
+qbeta(c(0.05, 0.95), 1 + n, 1 + obs_sum)
+
+# calculating the probability that the rate of success is bigger than 25%
+1 - pbeta(0.25, 1+n, 1+obs_sum)
+```
+
+A flat prior seems not very plausible, as data indicates that the success rate should be small. Using a flat prior probably gives too much weight to high success rates and therefore overestimates the real success rate.
+
+## Task 3
+You have two machines producing a good. Your quality control tracks the number of proper goods until the machine produces a poor good.
+
+- The counts of machine 1 are: 10, 15, 18, 20, 5, 12 and 3.
+- The counts of machine 2 are: 23, 16, 19, 28 and 37.
+
+Assume a Beta(1, 20) prior on the failure rate and calculate an equal-tailed 95% credible interval for each machine. What’s the expected failure rate for each machine? Calculate the maximum a posteriori probability (MAP) estimate for each failure rate.
+
+***
+```{r}
+# number of observations
+nM1 <- 7
+nM2 <- 5
+
+# sum of failures
+sumObsM1 <- sum(c(10, 15, 18, 20, 5, 12, 3))
+sumObsM2 <- sum(c(23, 16, 19, 28, 37))
+
+# equal-tailed 95% credible interval
+qbeta(c(0.025, 0.975), 1+nM1, 20+sumObsM1)
+qbeta(c(0.025, 0.975), 1+nM2, 20+sumObsM2)
+
+# expected failure rate (E(X))
+expFailM1 <- (1+nM1) / ((1+nM1) + 20+sumObsM1)
+expFailM1
+expFailM2 <- (1+nM2) / ((1+nM2) + 20+sumObsM2)
+expFailM2
+
+# maximum a posteriori probability (MAP) -> mode(X)
+mapM1 <- ((1+nM1) - 1) / ((1+nM1) + (20+sumObsM1) - 2)
+mapM1
+mapM2 <- ((1+nM2) - 1) / ((1+nM2) + (20+sumObsM2) - 2)
+mapM2
+```
+
+
+***
+
 ## Question Task 1
 |>Q: 
 
