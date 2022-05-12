@@ -241,5 +241,27 @@ P(B, A) = P(A) * P(B|A) = 0.75 * 0.33 = `r 0.75*1/3`
 ***
 
 ## Task 4
+Automated email classiﬁcation
 
+Suppose an online shop wants to forward all unspeciﬁed emails to the technical support (helpdesk) or the sales department (sales).
 
+In general **75%** of all unspeciﬁed emails have contents that belong to the sales department, the remaining emails have contents belonging to the helpdesk. You noticed, that most emails containing the string cost in the body of the email, should be forwarded to the sales department.To quanﬁfy this, you carry out an experiment:
+
+• 100 unspeciﬁed emails have been evaluated, that had contents belonging to the helpdesk.
+
+10 of them contained the string cost: P(cost | heldpesk) = 0.1.
+
+• 100 unspeciﬁed emails heve been evaluated, that had contents belonging to the sales department. 80 of them contained the string cost: P(cost | sales) = 0.8.
+
+Calculate the probability of the naive Bayes classiﬁer: P(sales | cost).
+
+***
+
+P(sales | costs)\
+= $\frac{P(costs | sales) * P(sales)}{P(costs)}$\
+\
+= $\frac{P(costs | sales) * P(sales)}{P(costs | sales) * P(sales) + P(costs | helpdesk) * P(helpdesk)}$\
+\
+= $\frac{0.8 * 0.75}{0.8 * 0.75 + 0.1 * 0.25}$\
+\
+= `r (0.8 * 0.75) / (0.8 * 0.75 + 0.1 * 0.25)`
