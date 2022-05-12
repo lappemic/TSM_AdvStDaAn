@@ -265,3 +265,150 @@ P(sales | costs)\
 = $\frac{0.8 * 0.75}{0.8 * 0.75 + 0.1 * 0.25}$\
 \
 = `r (0.8 * 0.75) / (0.8 * 0.75 + 0.1 * 0.25)`
+
+## Task 5
+Bluetooth earphones
+
+You want to buy new earphones. You can decide between two almost identical products:
+
+• Earphones A has 500 likes and 50 dislikes.
+
+• Earphones B has 21 likes and 2 dislikes.
+
+Based on the data and assuming similar preferences among consumers: What’s the probability that you are satisﬁed with earphones A and earphones B, when you are commonly satisﬁed with about 80% of your online shopping activities (try to ﬁnd an appropriate beta prior with mode=0.8 and standard deviation about 12%)?
+
+***
+
+There are two parameters to fit for the beta prior (mean and variance):\
+\
+mode(X) = $\frac{a-1}{a+b-2}$\
+Var(X) = $\frac{ab}{(a+b+1)(a+b)^{2}}$\
+\
+$\frac{a-1}{a+b-2} = 0.8$\
+a = 4b-3
+
+Substitute in mode:
+$\frac{4b-3-1}{4b-3+b-2}$ ~ $0.12^{2}$
+
+Now try out different values for b:
+
+```{r}
+# Find prior by searching
+b = 1:5
+(4*b-3)*b/(5*b-2)/(5*b-3)^2
+for(i in b){
+  print(paste('When b =', i))
+  tmpb = (4*i-3)*i/(5*i-2)/(5*i-3)^2
+  print(paste('mode =', tmpb))
+  i = i+1
+}
+# => b = 3 => a = 9
+curve(dbeta(x,9,3))
+```
+
+Now solve this task via simulation:
+
+```{r task5b, eval = FALSE}
+likes_ABTest = function(nSamples = 100)
+{
+    likesAB = matrix(NA,nrow=nSamples,ncol=2)
+    j = 1
+    for(i in 1:10000000){
+        xA = rbeta(1,9,3)   # priorA
+        xB = rbeta(1,9,3)   # priorB
+        nLikesA = rbinom(1,550,xA)    # simulate generative model
+        nLikesB = rbinom(1,23,xB)     # simlate generative model
+        if(nLikesA == 500 && nLikesB == 21) # condition on observed data
+        {
+           likesAB[j,] = c(xA,xB)
+           if(j>=nSamples)
+           {
+               break;
+           }
+           j = j+1
+        }
+    }
+    print(i)
+    invisible(likesAB)
+}
+likes_ABTest()
+# get 1000 samples
+likes_ABTest(1000) -> result
+plot(result[,1],result[,2],xlim=c(0,1),ylim=c(0,1))
+abline(0,1)
+sum(result[,1]>result[,2])
+
+mean(result[,1])
+mean(result[,2])
+
+# Probability that you like earphones A
+a = rbinom(1000,1,result[,1])
+sum(a)/1000
+#Probability that you like earphones B
+b = rbinom(1000,1,result[,2])
+sum(b)/1000
+```
+
+
+***
+## Question Task 5
+> Where comes the common satisfaction with the online shopping activities in? Does this not play a role here?
+
+***
+
+## Task 6
+Series of coin tossing
+
+You conducted a coin tossing experiment with 10 i.i.d. consecutive coin tosses.
+You counted a series of 7 (or more) equal consecutive states. 
+Compute a 90% credible region of the form $[0, c]  \cap [1-c, 1]$ for some c in the interval (0, 0.5) for the probability of tossing a head by simulation.
+
+Use the R function rle to compute the lengths of runs (series of equal consecutive values) in a
+vector.
+
+***
+
+Because there is no prior information one should use a flat prior (beta(1,1))
+
+```{r}
+seriesTossing = function(nSamples = 100)
+{
+    posteriorHead = rep(NA,nSamples)    # init posterior
+    j = 1
+    for(i in 1:10000000)
+    {
+        priorHead     = rbeta(1,1,1)
+        # print(priorHead)
+        observations  = rbinom(10,1,priorHead)
+        # print(observations)
+        lenghtrun = max(rle(observations)$lengths)
+        # print(lenghtrun)
+        if(lenghtrun >= 7)
+        {
+           posteriorHead[j] = priorHead
+           if(j>=nSamples)
+           {
+               break;
+           }
+           j = j+1
+        }
+    }
+    print(i)
+    invisible(posteriorHead)
+}
+# get 1000 samples
+seriesTossing(10000) -> posterior
+hist(posterior,breaks=50,col="magenta")
+abline(v=.5)
+
+abline(v=quantile(posterior,c(.45,.55)))
+quantile(posterior,c(.45,.55))
+
+# Answer:
+# c = .29
+```
+
+***
+## Question Task 6
+| > Q: Why cant we just use a uniform prior here?
+|   > A: A beta distribution with a = b = 1 is equal to a unifrom distribution.
