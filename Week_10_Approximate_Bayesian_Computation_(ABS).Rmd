@@ -101,9 +101,9 @@ par(mfcol=c(1,1))
 This would be the approach per prior. But in the solution was a way easier approach to do so. This one is used beneath.
 
 ***
-## Question 1, Task 1
-> Why are there these warning in the model data simulation process in this kind of approach?
-> I adjusted n for the binomial sampling in rbinom to the singnups. Which is apparently wrong.
+## Question, Task 1
+|> Q:Why are there these warning in the model data simulation process in this kind of approach?
+|>   I adjusted n for the binomial sampling in rbinom to the singnups. Which is apparently wrong.
 
 ***
 
@@ -156,9 +156,9 @@ print(mean(margPosteriorA)); mean(margPosteriorB)
 
 ***
 
-## Question 2, Task 1
-> If i use a prior of beta(3, 25) i do not get any marginal posteriors. Why is that?
-> 
+## Question, Task 1
+|> Q: If i use a prior of beta(3, 25) i do not get any marginal posteriors. Why is that?
+
 
 ***
 
@@ -236,7 +236,7 @@ P(B, A) = P(A) * P(B|A) = 0.75 * 0.33 = `r 0.75*1/3`
 
 ***
 ## Question Task 3
-> - Why is the above solution not correct? Why is it just 1/3 and not 1/4?
+|> Q: Why is the above solution not correct? Why is it just 1/3 and not 1/4?
 
 ***
 
@@ -352,7 +352,7 @@ sum(b)/1000
 
 ***
 ## Question Task 5
-> Where comes the common satisfaction with the online shopping activities in? Does this not play a role here?
+|> Q: Where comes the common satisfaction with the online shopping activities in? Does this not play a role here?
 
 ***
 
@@ -410,5 +410,62 @@ quantile(posterior,c(.45,.55))
 
 ***
 ## Question Task 6
-| > Q: Why cant we just use a uniform prior here?
-|   > A: A beta distribution with a = b = 1 is equal to a unifrom distribution.
+|> Q: Why cant we just use a uniform prior here?
+| > A: A beta distribution with a = b = 1 is equal to a unifrom distribution.
+
+***
+
+## Task 7
+2 stage coin tossing
+
+You study the outcome of a two stage coin tossing experiment. You observe:
+
+• two heads - 7 times,
+
+• one head and one tail - 10 times and
+
+• two tails - 3 times.
+
+The coin looks fair, so you believe that the probability for head is 50% ± 10%. Model an appropriate prior distribution from the Beta family of probability distributions. Calculate the posterior distribution for the probability of throwing a head approximately with the help of a simulation.
+
+***
+
+```{r}
+CoinTossing = function(nSamples = 100)
+{
+    posteriorHead = rep(NA,nSamples)
+    j = 1
+    for(i in 1:10000000)
+    {
+        priorHead = rbeta(1,12,12)
+        observations  = rbinom(20,2,priorHead)
+        nHeads = sum(observations==2)
+        nBoth  = sum(observations==1)
+        nTails = sum(observations==0)
+        if(nHeads == 7 && nBoth == 10 && nTails==3)
+        {
+           posteriorHead[j] = priorHead
+           if(j>=nSamples)
+           {
+               break;
+           }
+           j = j+1
+        }
+    }
+    print(i)
+    invisible(posteriorHead)
+}
+# get 1000 samples
+CoinTossing(1000) -> result
+hist(result,breaks=30, xlim = c(0,1), col='magenta')
+abline(v=.5, col = 'red')
+
+sum(result>0.5)/length(result)
+length(result)
+```
+
+***
+## Question Task 7
+|>Q: Why was a beta(12, 12) prior chosen?
+
+***
