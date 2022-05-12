@@ -50,11 +50,11 @@ The two parts consist of the following detailed program.
   
 7. Diagnostics and Model Improvements<br/>
   7.1 Dispersion Parameter<br/>
-    7.1.1 Its estimation<br/>
-    7.1.2 Models with $\phi$ = 1 and overdispersion<br/>
+     7.1.1 Its estimation<br/>
+     7.1.2 Models with $\phi$ = 1 and overdispersion<br/>
   7.2 Model Adequacy Checking - Diagnostics<br/>
-    7.2.1 Defining residual in case of glm<br/>
-    7.2.2 Do the basic diagnostic plots still work?<br/>
+     7.2.1 Defining residual in case of glm<br/>
+     7.2.2 Do the basic diagnostic plots still work?<br/>
   7.3 Generalised Additive Models (GAM)<br/>
   
 8. Some Extensions of Basic GLM<br/>
@@ -62,11 +62,32 @@ The two parts consist of the following detailed program.
   8.2 Quasi Approach<br/>
   8.3 Multinomial Models<br/>
   
-## Part II
+## Part II: Beyesian Statistic
 1. What is Bayesian Data Analysis?<br/>
-  1.1 Frequentist Approach vs. Bayesian Data Analysis<br/>
-2. Swedish Fish Inc.'s Salmon signup model<br/>
-  2.1 Problem description<br/>
-  2.2 Bayesian Analysis<br/>
-3. Workflow of Bayesian Data Analysis<br/>
-  3.1 Recipe<br/>
+  1.1 What is Bayesian Data Analysis?<br/>
+    1.1.1 Frequentist Approach vs. Bayesian Data Analysis<br/>
+  1.2 Swedish Fish Inc.'s Salmon signup model<br/>
+    1.2.1 Problem description<br/>
+    1.2.2 Bayesian Analysis<br/>
+  1.3. Workflow of Bayesian Data Analysis<br/>
+    1.3.1 Recipe<br/>
+    
+2. Approximate Bayesian Computation (ABS)<br/>
+  2.1 Approximate Bayesian Computation<br/>
+    2.1.1 Bayes theorem<br/>
+    2.1.2 Rejection algorithm<br/>
+  2.2 A/B testing with Swedish Fish Inc.<br/>
+    2.2.1 Swedish Fish Inc.'s advertising strategy<br/>
+    2.2.2 Build full probabilistic model and evaluate strategies<br/>
+    
+3. Exact Bayesian Data Analysis, Discrete Probability Models<br/>
+  3.1 Binomial Model<br/>
+    3.1.1 Conjugate prior, update rule and examples<br/>
+  3.2 Geometric model<br/>
+    3.2.1 Conjugate prior, update rule and examples<br/>
+  3.3 Poisson Model<br/>
+    3.3.1 Conjugate prior, update rule and examples<br/>
+  3.4 Poisson model<br/>
+    3.4.1 Conjugate prior, update rule and examples<br/>
+  3.5 Hypergeometric model
+    3.5.1 Conjugate prior, update rule and examples<br/>
