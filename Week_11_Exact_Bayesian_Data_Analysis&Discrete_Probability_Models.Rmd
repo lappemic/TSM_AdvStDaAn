@@ -102,6 +102,12 @@ nM2 <- 5
 sumObsM1 <- sum(c(10, 15, 18, 20, 5, 12, 3))
 sumObsM2 <- sum(c(23, 16, 19, 28, 37))
 
+# parameters of both distribution
+aM1 <- 1+nM1
+bM1 <- 20+sumObsM1
+aM2 <- 1+nM2
+bM2 <- 20+sumObsM2
+
 # equal-tailed 95% credible interval
 qbeta(c(0.025, 0.975), 1+nM1, 20+sumObsM1)
 qbeta(c(0.025, 0.975), 1+nM2, 20+sumObsM2)
@@ -119,6 +125,16 @@ mapM2 <- ((1+nM2) - 1) / ((1+nM2) + (20+sumObsM2) - 2)
 mapM2
 ```
 
+## Task 4
+What’s the probability of observing two failures before a success occurs if θ is the probability of success?
+
+Calculate the maximum likelihood estimate for the parameter $\theta$ of the geometric distribution, when you observed two failures before a success occurs.
+
+What’s the posterior distribution of $\theta$ conditioned on two failures before a success occurs, when you assume a ﬂat prior?
+
+What’s the posterior mean of $\theta$?
+
+What’s the maximum a posteriori probability estimate of $\theta$?
 
 ***
 
