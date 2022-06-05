@@ -15,6 +15,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(scales)
+library(rmutil)
 ```
 
 ## Task 1
@@ -159,7 +160,7 @@ $\frac{2-1}{2+3-2}$ =
 `r (2-1)/(2+3-2)`
 
 ***
-## Question Task 4
+### Question Task 4
 |>Q1: How do we come up with the equations in the mle calculation? Where comes the argmax argument from?
 ***
 
@@ -202,3 +203,32 @@ sum(request>5)/n
 
 This means an additional machine would not be beneficial.
 
+## Task 6
+A random sample of size 10 from a container with 100 electronic elements is evaluated: 3 of 10 elements had failures.
+
+Determine the uncertainty for the number of elements with failures in the container, when the prior distribution on the number of elements with failures is BetaBinom(100, 2, 6). Calculate the equal-tailed 90% credible interval.
+
+***
+
+With a BetaBinom(100, 2, 6) prior the posterior becomes:\
+M-3 ~ BetaBin(100(N) - 10(n), 2(a) + 3(m), 6(b) + 10(n) - 3(m))
+```{r}
+# prior: a=2, b=6
+plot(dbetabinom(0:100,100,2/8,8))
+plot(dbetabinom(0:100,100,2/8,8), type = 'h')
+# posterior: a=2+3, b=6+7 -> explanation about implementation in the question header
+plot(3:93, dbetabinom(0:90, 90, 5/(5+13), 5+13)) 
+
+abline(v=3+qbetabinom(c(0.05,0.95),90,5/18,18))
+3+qbetabinom(c(0.05,0.95),90,5/18,18)
+
+```
+
+
+***
+
+### Question Task 6
+|>Q1: Why do we have to divide the vector of probabilities? Like 5/(5+13)?
+|>>A1: According to the documentation of betabinom (type ?dbetabinom in the console) the inputs for it are dbetabinom(y, size, m, s). Therby it is stated that \
+m = a/(a+b) and s = (a+b)
+***
