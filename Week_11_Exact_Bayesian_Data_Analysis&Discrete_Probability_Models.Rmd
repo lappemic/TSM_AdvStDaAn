@@ -161,7 +161,44 @@ $\frac{2-1}{2+3-2}$ =
 ***
 ## Question Task 4
 |>Q1: How do we come up with the equations in the mle calculation? Where comes the argmax argument from?
+***
 
+## Task 5
+Your business lends special machines on a daily basis. You have 5 machines to satisfy the demand. A staff member recorded the requests for these special machines on 10 successive days:
+
+5, 7, 3, 9, 2, 6, 6, 5, 8, 4.
+
+An additional machine would be proﬁtable, if you could lend the machine for at least 183 days per year (365 day).
+
+What’s the posterior distribution on requests per day $\lambda$? Calculate a 90% credible interval. Assume a Gamma(5, 1) prior on $\lambda$.
+
+Would it be beneﬁcial to invest in an additional machine?
 
 ***
+Posterior distribution on requests per day?
+$\theta|D$ ~ gamma(5 + )
+```{r}
+obs <- c(5, 7, 3, 9, 2, 6, 6, 5, 8, 4)
+(numObs <- length(obs))
+(sumObs <- sum(obs))
+```
+$\theta|D$ ~ Gamma(5 + sumObs, 1 + numObs)
+
+```{r}
+curve(dgamma(x, 5+sumObs, 1 + numObs), 0, 10)
+
+# 90% credible interval
+abline(v=qgamma(c(0.05,0.95),5+55,1+10))
+qgamma(c(0.05,0.95),5+55,1+10)
+
+# beneficial?
+n=100000
+# simulate the requests per day
+request = rpois(n,rgamma(n,5+55,1+10))
+hist(request,breaks=30,col="blue")
+# are there more than 5 requests per day in more than 50% of all days?
+sum(request>5)/n
+```
+
+This means an additional machine would not be beneficial.
 
