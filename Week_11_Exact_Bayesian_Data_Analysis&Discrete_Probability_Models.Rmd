@@ -27,10 +27,10 @@ Is it beneﬁcial to buy diodes of type 2? Reject rates usually vary around 10% 
 ***
 First one can calculate a and b for the beta prior.
 
-$\frac{a}{a+b}$ = 0.1
+$E(X) = \frac{a}{a+b}$ = 0.1
 b = 9a
 
-$\frac{ab}{(a+b+1)(a+b)^{2}} = 0.05^{2}$
+$Var(X) = \frac{ab}{(a+b+1)(a+b)^{2}} = 0.05^{2}$
 
 set b = 9a
 
@@ -99,8 +99,8 @@ nM1 <- 7
 nM2 <- 5
 
 # sum of failures
-sumObsM1 <- sum(c(10, 15, 18, 20, 5, 12, 3))
-sumObsM2 <- sum(c(23, 16, 19, 28, 37))
+(sumObsM1 <- sum(c(10, 15, 18, 20, 5, 12, 3)))
+(sumObsM2 <- sum(c(23, 16, 19, 28, 37)))
 
 # parameters of both distribution
 aM1 <- 1+nM1
@@ -126,20 +126,42 @@ mapM2
 ```
 
 ## Task 4
-What’s the probability of observing two failures before a success occurs if θ is the probability of success?
+- What’s the probability of observing two failures before a success occurs if $\theta$ is the probability of success?
 
-Calculate the maximum likelihood estimate for the parameter $\theta$ of the geometric distribution, when you observed two failures before a success occurs.
+- Calculate the maximum likelihood estimate for the parameter $\theta$ of the geometric distribution, when you observed two failures before a success occurs.
 
-What’s the posterior distribution of $\theta$ conditioned on two failures before a success occurs, when you assume a ﬂat prior?
+- What’s the posterior distribution of $\theta$ conditioned on two failures before a success occurs, when you assume a ﬂat prior?
 
-What’s the posterior mean of $\theta$?
+- What’s the posterior mean of $\theta$?
 
-What’s the maximum a posteriori probability estimate of $\theta$?
+- What’s the maximum a posteriori probability estimate of $\theta$?
+
+***
+Probability of observing two failures before a success occurs:
+$\theta(1-\theta)^2$
+
+mle estimate for $\theta$:
+```{r}
+1/3
+```
+
+Posterior distribution of $\theta$ conditioned on two failures before a success occurs with a flat prior?
+$\theta|D$ ~ beta(1 + 1, 1 + 2)
+
+Posterior mean of $\theta$?
+$E(X) = \frac{a}{a+b}$ = 
+$\frac{2}{2+3}$ =
+`r 2/(2+3)`
+
+Maximum a posteriori probability(MAP -> mode(X) estimate of $\theta$?
+$mode(X) = \frac{a-1}{a+b-2}$ =
+$\frac{2-1}{2+3-2}$ =
+`r (2-1)/(2+3-2)`
+
+***
+## Question Task 4
+|>Q1: How do we come up with the equations in the mle calculation? Where comes the argmax argument from?
+
 
 ***
 
-## Question Task 1
-|>Q: 
-
-
-***
