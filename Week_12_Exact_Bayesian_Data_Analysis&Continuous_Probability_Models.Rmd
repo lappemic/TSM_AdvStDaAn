@@ -79,7 +79,7 @@ The posterior standard deviation of the expected concentration $\mu$ is $\Big(  
 The posterior mean of the expected concentration $\mu$ is $\Big(      \frac{325}{2^2} +\frac{1590}{9^2}         \Big) \Big(  \frac{1}{2^2} + \frac{5}{9^2}    \Big)^{-1}  = 323.6$.
 
 
-```{r task2, eval = FALSE}
+```{r}
 # given information
 obs  = sum(310, 320, 324, 307, 329)
 nObs = 5
@@ -102,7 +102,7 @@ abline(v=qnorm(c(0.025,0.975), post_m, post_s), col="magenta")
 
 ABC approach: \
 
-```{r task2abc, eval = FALSE}
+```{r}
 # number of simulated values
 nSamples = 10000
 # simulate from the prior
@@ -130,6 +130,42 @@ quantile(posterior,c(0.025,0.5,0.975))
 ```
 
 
+## Task 3
+You know, that your measurements are normal distributed and centered around 1. The standard deviation is usually 0.5 ± 0.1.
+
+Calculate the precision and propose a suitable Gamma-Prior on the precision, that approximately reﬂects your prior knowledge.
+
+In an experiment you measured 2.3, 0.1, 1.2, 0.3, 1.3 and 1.6. What’s the posterior distribution of the precision?
+
+What’s the posterior mean; and calculate a 90% credible interval for the precision. In what range is the standard deviation, i.e. give a 90% credible interval.
+
+***
+
+```{r}
+# calculate a suitable Gamma prior:
+# the precision (inverse of variance) lies between
+1/c(0.4,0.5,0.6)^2 #mean=4 and sd is approx. 2
+# by visual inspection: Gamma(4,1) has too low variance, so try Gamma(4*2,1*2)
+curve(dgamma(x,4,1), 0, 10, col="cyan", lwd=5, ylim = c(0, 0.5))
+curve(dgamma(x,8,2), 0, 10, col="blue", lwd=5, add = T) #is a suitable prior with mean=4
+abline(v=1/c(0.4,0.5,0.6)^2)
+
+# posterior distribution of the precision:
+obs = c(2.3, 0.1, 1.2, 0.3, 1.3, 1.6)
+curve(dgamma(x, 8+6/2, 2+sum((obs-1)^2)/2), 0, 10, add=T, col="magenta", lwd=5)
+# posterior mean of the precision:
+(8+6/2)/(2+sum((obs-1)^2)/2)
+# 90% credible interval for posterior precision:
+posterior_precision = qgamma(c(0.05,0.95), 8+6/2, 2+sum((obs-1)^2)/2)
+# 90% credible interval for posterior standard deviation:
+posterior_sd = (sqrt(posterior_precision))^-1
+posterior_sd
+# compare with standard deviation of observed data:
+sd(c(2.3, 0.1, 1.2, 0.3, 1.3, 1.6))
+```
+
+Remark: The observed standard deviation on measurements is much higher than the prior on the standard deviation.
+This causes a shift of the prior to higher values of the posterior distribution.   
 
 
 ### Question Task
