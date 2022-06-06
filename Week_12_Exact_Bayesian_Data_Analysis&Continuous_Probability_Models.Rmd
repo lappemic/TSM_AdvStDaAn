@@ -1,0 +1,31 @@
+---
+title: "**AdvStDaAn, Worksheet, Week 12**"
+author: "Michael Lappert"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+  html_document:
+    toc: yes
+    toc_depth: 3
+  '': default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(scales)
+library(rmutil)
+```
+
+## Task 1
+
+
+
+***
+
+### Question Task
+|>Q1: Why do we have to divide the vector of probabilities? Like 5/(5+13)?
+|>>A1: According to the documentation of betabinom (type ?dbetabinom in the console) the inputs for it are dbetabinom(y, size, m, s). Therby it is stated that \
+m = a/(a+b) and s = (a+b)
+***
