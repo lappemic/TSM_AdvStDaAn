@@ -19,13 +19,121 @@ library(rmutil)
 ```
 
 ## Task 1
+You are working in a call center. In the past there were about 30 incomming calls per hour that have to be forwarded. The times between calls can be assumed to be exponentially distributed with rate $\lambda$.
 
+Based on your knowledge you model a prior on $\lambda$ that is Gamma distributed with mean 30 and standard deviation 10.
 
+You recorded 120 calls in 3 hours.
+
+Calculate a 90% credible interval for the parameter $\lambda$ based on observed data. Calculate the MAP estimate for the parameter $\lambda$.
+
+Assume you would have recorded 1200 calls in 30 hours, calculate the 90% credible interval for the parameter $\lambda$ and the MAP based on these observations.
 
 ***
 
+In the past: 30 calls/hour\
+Recorded: 120 calls in 3 hours (40 calls/hour)\
+prior: gamma distribution with $\mu$ = 30 and $\sigma$ = 10\
+
+For the gamma distribution the following equations can be used to calculate a and b:\
+$\mu = \frac{a}{b}$ and \
+$\sigma = \frac{a}{b^2}$
+
+solve for one and insert in second equation resulting in:
+```{r}
+a <- 9
+b <- 0.3
+
+# plot prior density
+curve(dgamma(x,a,b), 0, 100, ylim = c(0, 0.2), col = 'red') 
+# plot posterior density
+curve(dgamma(x,a+120,b+3), 0, 100, col="magenta", add=T) 
+# equal tailed 90% credible interval
+abline(v = qgamma(c(0.05,0.95), a+120, b+3))
+qgamma(c(0.05,0.95), a+120, b+3)
+# mode
+mode = (a+120-1)/(b+3)
+abline(v=mode)
+# more observations
+# equal tailed 90% credible interval
+qgamma(c(0.05,0.95),a+1200,b+30)
+# mode
+mode = (a+1200-1)/(b+30)
+```
+
+## Task 2
+The concentration of Carbon dioxide CO2 in the air is reported to be normally distributed with mean 325 ppm and standard deviation 2 (under certain conditions). You can take this as prior information.
+
+You conducted an experiment and measured the concentration of Carbon dioxide CO2 at different times in the air: 310 ppm, 320 ppm, 324 ppm, 307 ppm and 329 ppm. The data are normally distributed with a known ﬁxed standard deviaton 9.
+
+What’s an equally tailled 95% credible interval for the concentration of Carbon dioxide CO2  after seeing the data? Perform an exact Bayesian analysis and use an ABC approach to compare the results.
+
+***
+Exact Bayesian analysis:\
+
+
+Mean of observed carbon dioxide concentrations: mean(310, 320, 324, 307, 329) = 318 ppm \
+
+The posterior standard deviation of the expected concentration $\mu$ is $\Big(  \frac{1}{2^2} + \frac{5}{9^2}    \Big)^{-1} = 3.208$. \
+
+The posterior mean of the expected concentration $\mu$ is $\Big(      \frac{325}{2^2} +\frac{1590}{9^2}         \Big) \Big(  \frac{1}{2^2} + \frac{5}{9^2}    \Big)^{-1}  = 323.6$.
+
+
+```{r task2, eval = FALSE}
+# given information
+obs  = sum(310, 320, 324, 307, 329)
+nObs = 5
+sigma = 9
+m = 325
+s = 2
+# plot prior of expected concentration of carbon dioxide
+curve(dnorm(x,m,s), 310, 340)
+# calculate posterior distribution of expected concentration of carbon dioxide
+post_m = (m/s^2+obs/sigma^2)/(1/s^2+nObs/sigma^2) # different written than in slides: / and no ^-1
+post_m = (m/s^2+obs/sigma^2)*(1/s^2+nObs/sigma^2)^-1 # -> same as above
+post_s = (1/s^2+nObs/sigma^2)^-.5
+# plot posterior
+curve(dnorm(x,post_m,post_s), 310, 340, col="magenta", lwd=5, n=1001)
+curve(dnorm(x,m,s), 310, 340, col="cyan", lwd=5, n=1001, add=T)
+qnorm(c(0.025, 0.975), post_m, post_s)
+abline(v=qnorm(c(0.025,0.975), post_m, post_s), col="magenta")
+```
+
+
+ABC approach: \
+
+```{r task2abc, eval = FALSE}
+# number of simulated values
+nSamples = 10000
+# simulate from the prior
+prior = rnorm(nSamples, mean=325, sd=2)
+# observed value
+observed = sum(310, 320, 324, 307, 329)
+observed
+# take simulated parameters from prior in data generating process and keep values
+# if simulated data equals approximately observed data
+keep = rep(FALSE, nSamples)
+for(i in 1:nSamples)
+{
+  simulatedValues = rnorm(5, mean=prior[i], sd=9)
+  if(abs(sum(simulatedValues)-observed)<10)
+  {
+      keep[i] = TRUE
+  }
+}
+# condition on observed data
+posterior = prior[keep]
+# how many data are left after conditioning?
+length(posterior)
+# calculate the credible interval from the sample
+quantile(posterior,c(0.025,0.5,0.975))
+```
+
+
+
+
 ### Question Task
-|>Q1: Why do we have to divide the vector of probabilities? Like 5/(5+13)?
-|>>A1: According to the documentation of betabinom (type ?dbetabinom in the console) the inputs for it are dbetabinom(y, size, m, s). Therby it is stated that \
-m = a/(a+b) and s = (a+b)
+|>Q1: 
+|>>A1: 
+
 ***
