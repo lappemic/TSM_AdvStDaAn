@@ -224,7 +224,6 @@ abline(v=3+qbetabinom(c(0.05,0.95),90,5/18,18))
 
 ```
 
-
 ***
 
 ### Question Task 6
