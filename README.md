@@ -1,3 +1,8 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
 # TSM_AdvStDaAn
 Tracking excercises of MSE module Advanced Statistical Data Analyses of the MSc. in Engineering. The module consists of two parts:
 
@@ -91,3 +96,21 @@ The two parts consist of the following detailed program.
     3.4.1 Conjugate prior, update rule and examples<br/>
   3.5 Hypergeometric model
     3.5.1 Conjugate prior, update rule and examples<br/>
+    
+4. Exact Bayesian Data Analysis, Continuous Probability Models<br/>
+  4.1 Exponential model<br/>
+    4.1.1 Conjugate prior, update rule and examples<br/>
+  4.2 Gaussian Model<br/>
+    4.2.1 Conjugate prior, update rule and examples<br/>
+    
+5. Markov chain Monte Carlo (MCMC) methods<br/>
+  5.1 MCMC intuitive<br/>
+    5.1.2 Explanation of algorithm<br/>
+  5.2 MCMC more formal<br/>
+    5.2.1 Definitions<br/>
+  5.3 Monte Carlo<br/>
+    5.3.1 Algorithm<br/>
+  5.4 Bayesian Apporach to Linear Regression<br/>
+    5.4.1 Linear Regression<br/>
+    5.4.2 Setting up a full probabilistic model<br/>
+    5.4.3 Sampling from the posterior distribution<br/>
