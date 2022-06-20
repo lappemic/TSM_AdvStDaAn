@@ -19,154 +19,353 @@ library(rmutil)
 ```
 
 ## Task 1
-You are working in a call center. In the past there were about 30 incomming calls per hour that have to be forwarded. The times between calls can be assumed to be exponentially distributed with rate $\lambda$.
+Approximate the integral\
 
-Based on your knowledge you model a prior on $\lambda$ that is Gamma distributed with mean 30 and standard deviation 10.
+$\int_{-1}^{2} \big(x^2*cos(0.6x)+0.2 \big)dx$\
 
-You recorded 120 calls in 3 hours.
+via Monte Carlo simulation.
 
-Calculate a 90% credible interval for the parameter $\lambda$ based on observed data. Calculate the MAP estimate for the parameter $\lambda$.
-
-Assume you would have recorded 1200 calls in 30 hours, calculate the 90% credible interval for the parameter $\lambda$ and the MAP based on these observations.
-
-***
-
-In the past: 30 calls/hour\
-Recorded: 120 calls in 3 hours (40 calls/hour)\
-prior: gamma distribution with $\mu$ = 30 and $\sigma$ = 10\
-
-For the gamma distribution the following equations can be used to calculate a and b:\
-$\mu = \frac{a}{b}$ and \
-$\sigma = \frac{a}{b^2}$
-
-solve for one and insert in second equation resulting in:
 ```{r}
-a <- 9
-b <- 0.3
-
-# plot prior density
-curve(dgamma(x,a,b), 0, 100, ylim = c(0, 0.2), col = 'red') 
-# plot posterior density
-curve(dgamma(x,a+120,b+3), 0, 100, col="magenta", add=T) 
-# equal tailed 90% credible interval
-abline(v = qgamma(c(0.05,0.95), a+120, b+3))
-qgamma(c(0.05,0.95), a+120, b+3)
-# mode
-mode = (a+120-1)/(b+3)
-abline(v=mode)
-# more observations
-# equal tailed 90% credible interval
-qgamma(c(0.05,0.95),a+1200,b+30)
-# mode
-mode = (a+1200-1)/(b+30)
+# from solutionsheet:
+f = function(x){
+  return(x^2*cos(.6*x)+.2)
+  }
+x = seq(-1,2,.01)
+x
+y = f(seq(-1,2,.01))
+y
+plot(x, y, ylim=c(0,2), xlab="x", ylab="f(x)")
+abline(h=c(0,2), v=c(-1,2))
+n = 1000
+hits = 0
+for(i in 1:n)
+{
+    x_ = runif(1,-1,2)
+    y_ = runif(1,0,2)
+    col="black"
+    if(y_<f(x_))
+    {
+        hits = hits+1
+        col="green"
+    }
+    points(x_, y_, pch=16, col=col)
+}
+# hits/n = I/6  =>  I = hits/n*6
+hits/n*6 # Exact Integral: 2.50
 ```
 
 ## Task 2
-The concentration of Carbon dioxide CO2 in the air is reported to be normally distributed with mean 325 ppm and standard deviation 2 (under certain conditions). You can take this as prior information.
-
-You conducted an experiment and measured the concentration of Carbon dioxide CO2 at different times in the air: 310 ppm, 320 ppm, 324 ppm, 307 ppm and 329 ppm. The data are normally distributed with a known ﬁxed standard deviaton 9.
-
-What’s an equally tailled 95% credible interval for the concentration of Carbon dioxide CO2  after seeing the data? Perform an exact Bayesian analysis and use an ABC approach to compare the results.
+Proof: The stationary distribution is $(\frac{9}{27}, \frac{8}{27},  \frac{10}{27})$.\
+Does this Markov model satisfy 'detailed balance'?
 
 ***
-Exact Bayesian analysis:\
 
+stationary distribution:\
 
-Mean of observed carbon dioxide concentrations: mean(310, 320, 324, 307, 329) = 318 ppm \
+9/27  = 9/27 * 0.0 + 8/27 * 0.5 + 10/27 * 0.5  ok \
+8/27  = 9/27 * 0.8 + 8/27 * 0.1 + 10/27 * 0.0  ok \
+10/27 = 9/27 * 0.2 + 8/27 * 0.4 + 10/27 * 0.5  ok \
 
-The posterior standard deviation of the expected concentration $\mu$ is $\Big(  \frac{1}{2^2} + \frac{5}{9^2}    \Big)^{-1} = 3.208$. \
+$=> (9/27,8/27,10/27)$ is stationary distribution. \
 
-The posterior mean of the expected concentration $\mu$ is $\Big(      \frac{325}{2^2} +\frac{1590}{9^2}         \Big) \Big(  \frac{1}{2^2} + \frac{5}{9^2}    \Big)^{-1}  = 323.6$.
+detailed balance: \
 
-
-```{r}
-# given information
-obs  = sum(310, 320, 324, 307, 329)
-nObs = 5
-sigma = 9
-m = 325
-s = 2
-# plot prior of expected concentration of carbon dioxide
-curve(dnorm(x,m,s), 310, 340)
-# calculate posterior distribution of expected concentration of carbon dioxide
-post_m = (m/s^2+obs/sigma^2)/(1/s^2+nObs/sigma^2) # different written than in slides: / and no ^-1
-post_m = (m/s^2+obs/sigma^2)*(1/s^2+nObs/sigma^2)^-1 # -> same as above
-post_s = (1/s^2+nObs/sigma^2)^-.5
-# plot posterior
-curve(dnorm(x,post_m,post_s), 310, 340, col="magenta", lwd=5, n=1001)
-curve(dnorm(x,m,s), 310, 340, col="cyan", lwd=5, n=1001, add=T)
-qnorm(c(0.025, 0.975), post_m, post_s)
-abline(v=qnorm(c(0.025,0.975), post_m, post_s), col="magenta")
-```
-
-
-ABC approach: \
-
-```{r}
-# number of simulated values
-nSamples = 10000
-# simulate from the prior
-prior = rnorm(nSamples, mean=325, sd=2)
-# observed value
-observed = sum(310, 320, 324, 307, 329)
-observed
-# take simulated parameters from prior in data generating process and keep values
-# if simulated data equals approximately observed data
-keep = rep(FALSE, nSamples)
-for(i in 1:nSamples)
-{
-  simulatedValues = rnorm(5, mean=prior[i], sd=9)
-  if(abs(sum(simulatedValues)-observed)<10)
-  {
-      keep[i] = TRUE
-  }
-}
-# condition on observed data
-posterior = prior[keep]
-# how many data are left after conditioning?
-length(posterior)
-# calculate the credible interval from the sample
-quantile(posterior,c(0.025,0.5,0.975))
-```
-
+consider state 2 and 3: 8/27 * 0.4 is not 10/27 * 0 \
+$=>$ detailed balance does not hold.
 
 ## Task 3
-You know, that your measurements are normal distributed and centered around 1. The standard deviation is usually 0.5 ± 0.1.
+Find the equilibrium distribution.
 
-Calculate the precision and propose a suitable Gamma-Prior on the precision, that approximately reﬂects your prior knowledge.
-
-In an experiment you measured 2.3, 0.1, 1.2, 0.3, 1.3 and 1.6. What’s the posterior distribution of the precision?
-
-What’s the posterior mean; and calculate a 90% credible interval for the precision. In what range is the standard deviation, i.e. give a 90% credible interval.
+Does this Markov model satisfy ’detailed balance’?
 
 ***
 
-```{r}
-# calculate a suitable Gamma prior:
-# the precision (inverse of variance) lies between
-1/c(0.4,0.5,0.6)^2 #mean=4 and sd is approx. 2
-# by visual inspection: Gamma(4,1) has too low variance, so try Gamma(4*2,1*2)
-curve(dgamma(x,4,1), 0, 10, col="cyan", lwd=5, ylim = c(0, 0.5))
-curve(dgamma(x,8,2), 0, 10, col="blue", lwd=5, add = T) #is a suitable prior with mean=4
-abline(v=1/c(0.4,0.5,0.6)^2)
+From solution:
 
-# posterior distribution of the precision:
-obs = c(2.3, 0.1, 1.2, 0.3, 1.3, 1.6)
-curve(dgamma(x, 8+6/2, 2+sum((obs-1)^2)/2), 0, 10, add=T, col="magenta", lwd=5)
-# posterior mean of the precision:
-(8+6/2)/(2+sum((obs-1)^2)/2)
-# 90% credible interval for posterior precision:
-posterior_precision = qgamma(c(0.05,0.95), 8+6/2, 2+sum((obs-1)^2)/2)
-# 90% credible interval for posterior standard deviation:
-posterior_sd = (sqrt(posterior_precision))^-1
-posterior_sd
-# compare with standard deviation of observed data:
-sd(c(2.3, 0.1, 1.2, 0.3, 1.3, 1.6))
+Stationary distribution:
+```{r}
+m = matrix(c(.5, 0, 1, .25, .5, .0, .25, .5, 0), 3)
+m
+m = m%*%m
+m
+m = m%*%m
+m
+# m doesn't change any more
+# => (0.5,0.25,0.25) is stationary distribution
+# proof this!
 ```
 
-Remark: The observed standard deviation on measurements is much higher than the prior on the standard deviation.
-This causes a shift of the prior to higher values of the posterior distribution.   
+proof:\
 
+0.50 = 0.50 * 0.5  + 0.25 * 0.0 + 0.25 * 1.0  ok \
+0.25 = 0.50 * 0.25 + 0.25 * 0.5 + 0.25 * 0.0  ok \
+0.25 = 0.50 * 0.25 + 0.25 * 0.5 + 0.25 * 0.0  ok \
+
+detailed balance:  \
+
+consider state 2 and 3: 0.25 * 0.5 is not 0.25 * 0 \
+$=>$ detailed balance does not hold.
+
+## Task 4
+Find the equilibrium distribution.
+
+Does this Markov model satisfy ’detailed balance’?
+
+What’s the expected number of sunny days per year?
+
+***
+
+Stationary distribution:
+```{r}
+m = matrix(c(0.8, 0.4, 0.2, 0.6), 2)
+m
+m = m %*% m
+m
+(m = m %*% m)
+
+#           [,1]      [,2]
+# [1,] 0.6666667 0.3333333
+# [2,] 0.6666667 0.3333333
+# -> does not change anymore
+# (0.67, 0.33) is the stationary distribution
+```
+
+Proof:
+0.67 = 0.67*0.8 + 0.33*0.4 = `r 2/3*0.8 + 1/3*0.4` -> ok
+0.33 = 0.67*0.2 + 0.33*0.6 = `r 2/3*0.2 + 1/3*0.6` -> ok
+
+Detailed balance: \
+2/3 * 0.2 = `r 2/3*0.2` = 1/3 * 0.4 = `r 1/3*0.4` -> satisfies detailed balance
+
+
+The expected number of sunny days per year is 365 * 2/3 = `r 365 * 2/3`.
+
+## Task 5
+Recall our salmon selling company example: 6 out of 16 persons signed up.
+
+Infer the sign-up rate with a Markov chain Monte Carlo method. Consider a uniform and a Beta(2, 20) prior on the sign-up-rate and compare your results with the exact results from the theoretical approach using a conjugate prior.
+
+***
+
+From solution:
+
+**uniform prior:** \
+
+```{r task5, eval = TRUE}
+# 6 from 16 sign up for salomon
+# Baysian Data Analysis via MCMC
+nrSignups =  6
+nrTotal   = 16
+
+nSimulations = 100000
+
+signUpRate_i = runif(1)
+signUpRate_i
+
+sample_signUpRates = rep(NA,nSimulations)
+
+for(i in 1:nSimulations)
+{
+    signUpRate_prop = runif(1)
+    u = runif(1)
+    if( u < (dbinom(nrSignups,nrTotal,signUpRate_prop)/dbinom(nrSignups,nrTotal,signUpRate_i)))
+    {
+        signUpRate_i = signUpRate_prop
+    }
+    sample_signUpRates[i] = signUpRate_i
+}
+
+
+# chain with high correlation:
+hist(sample_signUpRates,breaks=seq(0,1,.02),col="blue")
+plot(sample_signUpRates)
+plot(sample_signUpRates[1:100])
+
+# Result:
+signUpRates_iid = sample_signUpRates[seq(100,nSimulations,50)]
+hist(signUpRates_iid,breaks=seq(0,1,.02),col="blue")
+abline(v=nrSignups/nrTotal,col="yellow",lwd=3)
+abline(v=mean(signUpRates_iid),col="red",lwd=3)
+abline(v=quantile(signUpRates_iid,c(0.025,.975)),col="red",lty=3,lwd=3)
+
+# Compare with theoretical result:
+hist(signUpRates_iid,breaks=seq(0,1,.02),col="blue",freq=FALSE)
+abline(v=nrSignups/nrTotal,col="yellow",lwd=3)
+abline(v=mean(signUpRates_iid),col="red",lwd=3)
+abline(v=quantile(signUpRates_iid,c(0.025,.975)),col="red",lty=3,lwd=3)
+# theoretical results in green
+curve(dbeta(x,1+6,1+10),add=T,lwd=3,col="green")
+abline(v=7/18,col="green",lwd=1)
+abline(v=qbeta(c(0.025,.975),7,11),col="green",lty=3,lwd=1)
+
+```
+
+
+
+
+**Beta(2, 20)-prior:** \
+
+```{r task5b, eval = TRUE}
+# 6 from 16 sign up for salomon
+# Baysian Data Analysis via MCMC
+nrSignups =  6
+nrTotal   = 16
+
+nSimulations = 100000
+
+signUpRate_i = rbeta(1, 2, 20)
+
+sample_signUpRates = rep(NA,nSimulations)
+
+for(i in 1:nSimulations)
+{
+    signUpRate_prop = runif(1)
+    u = runif(1)
+    if( u < (dbinom(nrSignups,nrTotal,signUpRate_prop)*dbeta(signUpRate_prop,2,20))
+             /(dbinom(nrSignups,nrTotal,signUpRate_i)*dbeta(signUpRate_i,2,20)) )
+    {
+        signUpRate_i = signUpRate_prop
+    }
+    sample_signUpRates[i] = signUpRate_i
+}
+
+
+# chain with high correlation:
+#hist(sample_signUpRates,breaks=seq(0,1,.02),col="blue")
+#plot(sample_signUpRates)
+#plot(sample_signUpRates[1:100])
+
+# Result:
+signUpRates_iid = sample_signUpRates#= sample_signUpRates[seq(100,nSimulations,50)]
+hist(signUpRates_iid,breaks=seq(0,1,.02),col="blue")
+abline(v=nrSignups/nrTotal,col="yellow",lwd=3)
+abline(v=mean(signUpRates_iid),col="red",lwd=3)
+abline(v=quantile(signUpRates_iid,c(0.025,.975)),col="red",lty=3,lwd=3)
+
+# Compare with theoretical result:
+hist(signUpRates_iid,breaks=seq(0,1,.02),col="blue",freq=FALSE)
+abline(v=nrSignups/nrTotal,col="yellow",lwd=3)
+abline(v=mean(signUpRates_iid),col="red",lwd=3)
+abline(v=quantile(signUpRates_iid,c(0.025,.975)),col="red",lty=3,lwd=3)
+# theoretical results in green
+curve(dbeta(x,2+6,20+10),add=T,lwd=3,col="green")
+abline(v=8/38,col="green",lwd=1)
+abline(v=qbeta(c(0.025,.975),8,30),col="green",lty=3,lwd=1)
+
+```
+
+
+## Task 6
+Let 
+
+x = c(3.4, -4.2, -0.7, -2.6, -1.6, -1.2, -2.2, -3.7, -0.9, -3.1) 
+
+be some observations with corresponding responses
+
+y = c(5.7, -0.1,  4.7,  2.7,  3.1,  2.3,  3.4,  1.0,  2.2,  1.5).
+
+The values were simulated by the formular: y = 3 + 0.3*x + rnorm(10,0,1). \
+
+Consider a linear model, i.e. $y_i = \beta_0 + \beta_1 x_i + \epsilon_i$, with Gaussian noise $\epsilon_i \sim Norm(o,\sigma^2)$. 
+Assume a Gamma(1,1)- prior on sigma and normal distributed priors with mean 0 and standard deviation 3 on  $\beta_0$ and $\beta_1$.\
+
+Perform a Bayesian analysis: Estimate the posterior mean and credible intervals for $\beta_0$, $\beta_1$ and sigma.
+
+***
+
+From solution:
+```{r}
+# Observed data:
+obs_x = c(3.4, -4.2, -0.7, -2.6, -1.6, -1.2, -2.2, -3.7, -0.9, -3.1)
+obs_y = c(5.7,-0.1, 4.7, 2.7, 3.1, 2.3, 3.4, 1.0, 2.2, 1.5)
+# Log of (unnormalized) posterior density
+logPosterior = function(b0_, b1_, sigma_){
+   sum(dnorm(b0_+b1_*obs_x - obs_y, 0, sigma_, log=TRUE)) +
+    dnorm(b0_, 0, 3, log=TRUE) +
+    dnorm(b1_, 0, 3, log=TRUE) +
+    dgamma(sigma_, 1, 1, log=TRUE)
+}
+# Starting value
+b0 = runif(1,0,1)
+b1 = runif(1,0,1)
+sigma = runif(1,0,1)
+# Collect sampled values
+b0_sample = c()
+b1_sample = c()
+sigma_sample = c()
+# Bayesian Data Analysis via MCMC
+for(i in 1:10000) {
+    b0_prop = rnorm(1, b0, 0.3)
+    b1_prop = rnorm(1, b1, 0.3)
+    s_prop = abs(rnorm(1, sigma, 0.3))
+    R = exp(logPosterior(b0_prop, b1_prop, s_prop)-logPosterior(b0, b1, sigma))
+    u = runif(1)
+    if( u <  R)
+    {
+        b0 = b0_prop
+        b1 = b1_prop
+        sigma = s_prop
+    }
+    b0_sample = c(b0_sample,b0)
+    b1_sample = c(b1_sample,b1)
+    sigma_sample = c(sigma_sample,sigma)
+}
+# Evaluation
+plot(b0_sample, main='Traceplot b0')
+plot(b1_sample, main='Traceplot b1')
+plot(sigma_sample, main='Traceplot sigma')
+plot(b0_sample,b1_sample, main='Scatterplot b0 against b1')
+# Thinning the chains to get iid samples
+b0_iid = b0_sample[1:100*100]
+b1_iid = b1_sample[1:100*100]
+sigma_iid = sigma_sample[1:100*100]
+plot(obs_x,obs_y)
+for(i in 1:100)
+{
+  abline(b0_iid[i],b1_iid[i])
+}
+points(obs_x,obs_y,col='red')
+mean(b0_iid)
+quantile(b0_iid,c(0.025,.975))
+mean(b1_iid)
+quantile(b1_iid,c(0.025,.975))
+mean(sigma_iid)
+quantile(sigma_iid,c(0.025,.975))
+# Compare
+lm(obs_y~obs_x)
+```
+
+
+
+
+```{r}
+# Code from slide 60 of week 13
+x = -10 
+s = 0.5 
+xPath = c() 
+
+for(i in 1:10000) {
+  xProp = x + runif(1,-s,s)
+  if(exp(-xProp^2/2)/exp(-x^2/2) > runif(1)) {
+    x = xProp
+    }
+  xPath = c(xPath,x)
+} 
+
+plot(xPath) 
+points(1:100*100, xPath[1:100*100], col="red") 
+hist(xPath[1:100*100], breaks = 50)
+
+runif(1)
+```
+
+
+## Task 2
+
+
+
+
+***
 
 ### Question Task
 |>Q1: 
