@@ -198,6 +198,7 @@ Calculate a posterior sample for the signup rate with each of the above priors a
 n = 1000
 
 # Prior uniformly distributed between 0.1 and 0.5
+par(mfrow=c(1,1))
 priorUnif = runif(n, min = 0.1, 0.5)
 hist(priorUnif)
 ```
@@ -212,7 +213,7 @@ so
 
 $b = 4a$ 
 
-and plotting this into the variance function results in 
+and putting this into the variance function results in 
 
 $\frac{4a^{2}}{(5a+2)(5a)^{2}} = 0.1^{2}$
 $4a^{2} = 0.1^{2} * (5a+1)(5a)^{2}$
@@ -260,7 +261,7 @@ generativemodelBeta <- function(theta) {
 # Simulate and store data using parameters from the prior and the generative model: 
 simdataBeta <- rep(NA, n)
 for(i in 1:n) {
-  simdataBeta[i] <- generativemodelBeta(priorUnif[i])
+  simdataBeta[i] <- generativemodelBeta(priorBeta[i])
 }
 
 # Filter out all draws that do not match the data:
@@ -296,7 +297,7 @@ What is the learning here? What should be observed by comparing the built distri
 ***
 
 ## Task 6
-Perform a Bayesian data analysis to infer the fraction of voters in the population that favor party A, when you observe 68 people that prefer party A and 52 people that prefer party B (and people were randomly drawn from the population). Assume a Beta(40, 40) prior on the fration of voters that favor party A.
+Perform a Bayesian data analysis to infer the fraction of voters in the population that favor party A, when you observe 68 people that prefer party A and 52 people that prefer party B (and people were randomly drawn from the population). Assume a Beta(40, 40) prior on the fraction of voters that favor party A.
 
 ***
 ```{r}
@@ -351,5 +352,6 @@ floor(quantile(Bvoters, c(.05, .95))) # 90% equal-tailed credible interval
 ***
 ### Question Task 6
 - Why did you choose a Beta(40, 40) distribution?
+- When calculating the probability that the fraction of supporters for party A is greater than the fraction of supporters of party B: Why belong values with posterior > 0.5 to party A?
 
 ***
