@@ -11,6 +11,8 @@ Tracking excercises of MSE module Advanced Statistical Data Analyses of the MSc.
 
 The two parts consist of the following detailed program.
 
+> For more projects and tools, visit [michaelscheiwiller.com](https://michaelscheiwiller.com)
+
 ## Part I: Advanced Regression Modelling
 1. Introduction<br/>
 
